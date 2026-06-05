@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.productcontact.dao.ProductcontactDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            contactid,
+            sourceid,
+            sourcename,
+            createtimestamp,
+            updatetimestamp    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                contactid,
+                sourceid,
+                sourcename,
+                createtimestamp,
+                updatetimestamp    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getProductcontactListForPage" resultType="com.tpfh.fintech.modules.pmjk.productcontact.entity.ProductcontactEntity">
+		 select <include refid="allColumns"/> from pmjk_productcontact
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="contactid != null and contactid != ''"> and contactid=#{contactid}</if>
+          	<if test="sourceid != null and sourceid != ''"> and sourceid=#{sourceid}</if>
+          	<if test="sourcename != null and sourcename != ''"> and sourcename=#{sourcename}</if>
+          	<if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+          	<if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getProductcontactList" resultType="com.tpfh.fintech.modules.pmjk.productcontact.entity.ProductcontactEntity">
+        select <include refid="allColumns"/> from pmjk_productcontact
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="contactid != null and contactid != ''"> and contactid=#{contactid}</if>
+            <if test="sourceid != null and sourceid != ''"> and sourceid=#{sourceid}</if>
+            <if test="sourcename != null and sourcename != ''"> and sourcename=#{sourcename}</if>
+            <if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+            <if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addProductcontact" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_productcontact (<include refid="exceptIdColumns"/>)
+        values(
+                #{contactid},
+                #{sourceid},
+                #{sourcename},
+                #{createtimestamp},
+                #{updatetimestamp}        );
+    </insert>
+    
+    <!-- 根据发行人或担保人所在表的id及类型，查询其对应所有联系人信息 -->
+    <select id="getContactList" resultType="com.tpfh.fintech.modules.pmjk.baseInstitutionscontact.entity.BaseInstitutionscontactEntity">
+    	    select  tel, mobile, email, name
+    	    from pmjk_productcontact c inner join pmjk_base_institutionscontact b on c.contactid = b.id
+    	    where c.sourceid = #{sourceid} and c.sourcename = #{sourcename} 
+    </select>
+
+    
+</mapper>

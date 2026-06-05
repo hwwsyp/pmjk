@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.baseInstitutionscontact.dao.BaseInstitutionscontactDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            tel,
+            mobile,
+            email,
+            address,
+            postcode,
+            name,
+            createtimestamp,
+            updatetimestamp,
+            institutionsid    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                tel,
+                mobile,
+                email,
+                address,
+                postcode,
+                name,
+                createtimestamp,
+                updatetimestamp,
+                institutionsid    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getBaseInstitutionscontactListForPage" resultType="com.tpfh.fintech.modules.pmjk.baseInstitutionscontact.entity.BaseInstitutionscontactEntity">
+		 select <include refid="allColumns"/> from pmjk_base_institutionscontact
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="tel != null and tel != ''"> and tel=#{tel}</if>
+          	<if test="mobile != null and mobile != ''"> and mobile=#{mobile}</if>
+          	<if test="email != null and email != ''"> and email=#{email}</if>
+          	<if test="address != null and address != ''"> and address=#{address}</if>
+          	<if test="postcode != null and postcode != ''"> and postcode=#{postcode}</if>
+          	<if test="name != null and name != ''"> and name=#{name}</if>
+          	<if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+          	<if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+          	<if test="institutionsid != null and institutionsid != ''"> and institutionsid=#{institutionsid}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getBaseInstitutionscontactList" resultType="com.tpfh.fintech.modules.pmjk.baseInstitutionscontact.entity.BaseInstitutionscontactEntity">
+        select <include refid="allColumns"/> from pmjk_base_institutionscontact
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="tel != null and tel != ''"> and tel=#{tel}</if>
+            <if test="mobile != null and mobile != ''"> and mobile=#{mobile}</if>
+            <if test="email != null and email != ''"> and email=#{email}</if>
+            <if test="address != null and address != ''"> and address=#{address}</if>
+            <if test="postcode != null and postcode != ''"> and postcode=#{postcode}</if>
+            <if test="name != null and name != ''"> and name=#{name}</if>
+            <if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+            <if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+            <if test="institutionsid != null and institutionsid != ''"> and institutionsid=#{institutionsid}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addBaseInstitutionscontact" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_base_institutionscontact (<include refid="exceptIdColumns"/>)
+        values(
+                #{tel},
+                #{mobile},
+                #{email},
+                #{address},
+                #{postcode},
+                #{name},
+                #{createtimestamp},
+                #{updatetimestamp},
+                #{institutionsid}        );
+    </insert>
+
+    
+</mapper>

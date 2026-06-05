@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.stakeholder.dao.StakeholderDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            investmentmanagerid,
+            administrationmanagerid,
+            investmentadviserid,
+            custodianbankid,
+            tradingbrokerid,
+            financingsubjectid,
+            repaymentsubjectid,
+            independentsupervisorid,
+            trusteemanagerid,
+            originalholderid,
+            coinitiatorid,
+            projectorgid,
+            fundmanagerid,
+            trustcompanyid,
+            generalpartnerid,
+            specialpartnerid,
+            versionnum,
+            productid,
+            createtimestamp,
+            updatetimestamp,
+            islock    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                investmentmanagerid,
+                administrationmanagerid,
+                investmentadviserid,
+                custodianbankid,
+                tradingbrokerid,
+                financingsubjectid,
+                repaymentsubjectid,
+                independentsupervisorid,
+                trusteemanagerid,
+                originalholderid,
+                coinitiatorid,
+                projectorgid,
+                fundmanagerid,
+                trustcompanyid,
+                generalpartnerid,
+                specialpartnerid,
+                versionnum,
+                productid,
+                createtimestamp,
+                updatetimestamp,
+                islock    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getStakeholderListForPage" resultType="com.tpfh.fintech.modules.pmjk.stakeholder.entity.StakeholderEntity">
+		 select <include refid="allColumns"/> from pmjk_stakeholder
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="investmentmanagerid != null and investmentmanagerid != ''"> and investmentmanagerid=#{investmentmanagerid}</if>
+          	<if test="administrationmanagerid != null and administrationmanagerid != ''"> and administrationmanagerid=#{administrationmanagerid}</if>
+          	<if test="investmentadviserid != null and investmentadviserid != ''"> and investmentadviserid=#{investmentadviserid}</if>
+          	<if test="custodianbankid != null and custodianbankid != ''"> and custodianbankid=#{custodianbankid}</if>
+          	<if test="tradingbrokerid != null and tradingbrokerid != ''"> and tradingbrokerid=#{tradingbrokerid}</if>
+          	<if test="financingsubjectid != null and financingsubjectid != ''"> and financingsubjectid=#{financingsubjectid}</if>
+          	<if test="repaymentsubjectid != null and repaymentsubjectid != ''"> and repaymentsubjectid=#{repaymentsubjectid}</if>
+          	<if test="independentsupervisorid != null and independentsupervisorid != ''"> and independentsupervisorid=#{independentsupervisorid}</if>
+          	<if test="trusteemanagerid != null and trusteemanagerid != ''"> and trusteemanagerid=#{trusteemanagerid}</if>
+          	<if test="originalholderid != null and originalholderid != ''"> and originalholderid=#{originalholderid}</if>
+          	<if test="coinitiatorid != null and coinitiatorid != ''"> and coinitiatorid=#{coinitiatorid}</if>
+          	<if test="projectorgid != null and projectorgid != ''"> and projectorgid=#{projectorgid}</if>
+          	<if test="fundmanagerid != null and fundmanagerid != ''"> and fundmanagerid=#{fundmanagerid}</if>
+          	<if test="trustcompanyid != null and trustcompanyid != ''"> and trustcompanyid=#{trustcompanyid}</if>
+          	<if test="generalpartnerid != null and generalpartnerid != ''"> and generalpartnerid=#{generalpartnerid}</if>
+          	<if test="specialpartnerid != null and specialpartnerid != ''"> and specialpartnerid=#{specialpartnerid}</if>
+          	<if test="versionnum != null and versionnum != ''"> and versionnum=#{versionnum}</if>
+          	<if test="productid != null and productid != ''"> and productid=#{productid}</if>
+          	<if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+          	<if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+          	<if test="islock != null and islock != ''"> and islock=#{islock}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getStakeholderList" resultType="com.tpfh.fintech.modules.pmjk.stakeholder.entity.StakeholderEntity">
+        select <include refid="allColumns"/> from pmjk_stakeholder
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="investmentmanagerid != null and investmentmanagerid != ''"> and investmentmanagerid=#{investmentmanagerid}</if>
+            <if test="administrationmanagerid != null and administrationmanagerid != ''"> and administrationmanagerid=#{administrationmanagerid}</if>
+            <if test="investmentadviserid != null and investmentadviserid != ''"> and investmentadviserid=#{investmentadviserid}</if>
+            <if test="custodianbankid != null and custodianbankid != ''"> and custodianbankid=#{custodianbankid}</if>
+            <if test="tradingbrokerid != null and tradingbrokerid != ''"> and tradingbrokerid=#{tradingbrokerid}</if>
+            <if test="financingsubjectid != null and financingsubjectid != ''"> and financingsubjectid=#{financingsubjectid}</if>
+            <if test="repaymentsubjectid != null and repaymentsubjectid != ''"> and repaymentsubjectid=#{repaymentsubjectid}</if>
+            <if test="independentsupervisorid != null and independentsupervisorid != ''"> and independentsupervisorid=#{independentsupervisorid}</if>
+            <if test="trusteemanagerid != null and trusteemanagerid != ''"> and trusteemanagerid=#{trusteemanagerid}</if>
+            <if test="originalholderid != null and originalholderid != ''"> and originalholderid=#{originalholderid}</if>
+            <if test="coinitiatorid != null and coinitiatorid != ''"> and coinitiatorid=#{coinitiatorid}</if>
+            <if test="projectorgid != null and projectorgid != ''"> and projectorgid=#{projectorgid}</if>
+            <if test="fundmanagerid != null and fundmanagerid != ''"> and fundmanagerid=#{fundmanagerid}</if>
+            <if test="trustcompanyid != null and trustcompanyid != ''"> and trustcompanyid=#{trustcompanyid}</if>
+            <if test="generalpartnerid != null and generalpartnerid != ''"> and generalpartnerid=#{generalpartnerid}</if>
+            <if test="specialpartnerid != null and specialpartnerid != ''"> and specialpartnerid=#{specialpartnerid}</if>
+            <if test="versionnum != null and versionnum != ''"> and versionnum=#{versionnum}</if>
+            <if test="productid != null and productid != ''"> and productid=#{productid}</if>
+            <if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+            <if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+            <if test="islock != null and islock != ''"> and islock=#{islock}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addStakeholder" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_stakeholder (<include refid="exceptIdColumns"/>)
+        values(
+                #{investmentmanagerid},
+                #{administrationmanagerid},
+                #{investmentadviserid},
+                #{custodianbankid},
+                #{tradingbrokerid},
+                #{financingsubjectid},
+                #{repaymentsubjectid},
+                #{independentsupervisorid},
+                #{trusteemanagerid},
+                #{originalholderid},
+                #{coinitiatorid},
+                #{projectorgid},
+                #{fundmanagerid},
+                #{trustcompanyid},
+                #{generalpartnerid},
+                #{specialpartnerid},
+                #{versionnum},
+                #{productid},
+                #{createtimestamp},
+                #{updatetimestamp},
+                #{islock}        );
+    </insert>
+
+    
+</mapper>

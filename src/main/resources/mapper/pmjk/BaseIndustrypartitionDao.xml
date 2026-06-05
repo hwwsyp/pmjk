@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.baseIndustrypartition.dao.BaseIndustrypartitionDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            partmode,
+            pinyin,
+            memo,
+            createtime,
+            updatetime,
+            industrycode,
+            industryname,
+            originalcode    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                partmode,
+                pinyin,
+                memo,
+                createtime,
+                updatetime,
+                industrycode,
+                industryname,
+                originalcode    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getBaseIndustrypartitionListForSelectDialogPage" resultType="com.tpfh.fintech.modules.pmjk.baseIndustrypartition.entity.BaseIndustrypartitionEntity">
+		 select <include refid="allColumns"/> from pmjk_base_industrypartition
+		<where>
+		    length(industrycode) = 6
+          	<if test="partmode != null and partmode != ''"> and partmode=#{partmode}</if>
+          	<if test="industryname != null and industryname != ''"> and industryname like  '%' || #{industryname} || '%'</if> 
+		</where>
+	</select>
+    
+    
+    <!-- 查询分页信息 -->
+    <select id="getBaseIndustrypartitionListForPage" resultType="com.tpfh.fintech.modules.pmjk.baseIndustrypartition.entity.BaseIndustrypartitionEntity">
+		 select <include refid="allColumns"/> from pmjk_base_industrypartition
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="partmode != null and partmode != ''"> and partmode=#{partmode}</if>
+          	<if test="pinyin != null and pinyin != ''"> and pinyin=#{pinyin}</if>
+          	<if test="memo != null and memo != ''"> and memo=#{memo}</if>
+          	<if test="createtime != null and createtime != ''"> and createtime=#{createtime}</if>
+          	<if test="updatetime != null and updatetime != ''"> and updatetime=#{updatetime}</if>
+          	<if test="industrycode != null and industrycode != ''"> and industrycode=#{industrycode}</if>
+          	<if test="industryname != null and industryname != ''"> and industryname=#{industryname}</if>
+          	<if test="originalcode != null and originalcode != ''"> and originalcode=#{originalcode}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getBaseIndustrypartitionList" resultType="com.tpfh.fintech.modules.pmjk.baseIndustrypartition.entity.BaseIndustrypartitionEntity">
+        select <include refid="allColumns"/> from pmjk_base_industrypartition
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="partmode != null and partmode != ''"> and partmode=#{partmode}</if>
+            <if test="pinyin != null and pinyin != ''"> and pinyin=#{pinyin}</if>
+            <if test="memo != null and memo != ''"> and memo=#{memo}</if>
+            <if test="createtime != null and createtime != ''"> and createtime=#{createtime}</if>
+            <if test="updatetime != null and updatetime != ''"> and updatetime=#{updatetime}</if>
+            <if test="industrycode != null and industrycode != ''"> and industrycode=#{industrycode}</if>
+            <if test="industryname != null and industryname != ''"> and industryname=#{industryname}</if>
+            <if test="originalcode != null and originalcode != ''"> and originalcode=#{originalcode}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addBaseIndustrypartition" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_base_industrypartition (<include refid="exceptIdColumns"/>)
+        values(
+                #{partmode},
+                #{pinyin},
+                #{memo},
+                #{createtime},
+                #{updatetime},
+                #{industrycode},
+                #{industryname},
+                #{originalcode}        );
+    </insert>
+
+    
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.borrowinfo.dao.BorrowinfoDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            type,
+            content,
+            createtimestamp,
+            updatetimestamp,
+            islock,
+            creditenhanceid    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                type,
+                content,
+                createtimestamp,
+                updatetimestamp,
+                islock,
+                creditenhanceid    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getBorrowinfoListForPage" resultType="com.tpfh.fintech.modules.pmjk.borrowinfo.entity.BorrowinfoEntity">
+		 select <include refid="allColumns"/> from pmjk_borrowinfo
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="type != null and type != ''"> and type=#{type}</if>
+          	<if test="content != null and content != ''"> and content=#{content}</if>
+          	<if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+          	<if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+          	<if test="islock != null and islock != ''"> and islock=#{islock}</if>
+          	<if test="creditenhanceid != null and creditenhanceid != ''"> and creditenhanceid=#{creditenhanceid}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getBorrowinfoList" resultType="com.tpfh.fintech.modules.pmjk.borrowinfo.entity.BorrowinfoEntity">
+        select <include refid="allColumns"/> from pmjk_borrowinfo
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="type != null and type != ''"> and type=#{type}</if>
+            <if test="content != null and content != ''"> and content=#{content}</if>
+            <if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+            <if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+            <if test="islock != null and islock != ''"> and islock=#{islock}</if>
+            <if test="creditenhanceid != null and creditenhanceid != ''"> and creditenhanceid=#{creditenhanceid}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addBorrowinfo" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_borrowinfo (<include refid="exceptIdColumns"/>)
+        values(
+                #{type},
+                #{content},
+                #{createtimestamp},
+                #{updatetimestamp},
+                #{islock},
+                #{creditenhanceid}        );
+    </insert>
+
+    
+</mapper>

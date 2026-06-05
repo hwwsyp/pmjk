@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.releaseinfo.dao.ReleaseinfoDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            productid,
+            issuesecurity,
+            issueway,
+            issuemarketid,
+            issuemarketname,
+            issueid,
+            issuecountryid,
+            issueindustryid,
+            ratingtype,
+            ratinglevel,
+            versionnum,
+            createtimestamp,
+            updatetimestamp,
+            islock     </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                productid,
+                issuesecurity,
+                issueway,
+                issuemarketid,
+                issuemarketname,
+                issueid,
+                issuecountryid,
+                issueindustryid,
+                ratingtype,
+                ratinglevel,
+                versionnum,
+                createtimestamp,
+                updatetimestamp,
+                islock    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getReleaseinfoListForPage" resultType="com.tpfh.fintech.modules.pmjk.releaseinfo.entity.ReleaseinfoEntity">
+		 select <include refid="allColumns"/> from pmjk_releaseinfo
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="productid != null and productid != ''"> and productid=#{productid}</if>
+          	<if test="issuesecurity != null and issuesecurity != ''"> and issuesecurity=#{issuesecurity}</if>
+          	<if test="issueway != null and issueway != ''"> and issueway=#{issueway}</if>
+          	<if test="issuemarketid != null and issuemarketid != ''"> and issuemarketid=#{issuemarketid}</if>
+          	<if test="issuemarketname != null and issuemarketname != ''"> and issuemarketname=#{issuemarketname}</if>
+          	<if test="issueid != null and issueid != ''"> and issueid=#{issueid}</if>
+          	<if test="issuecountryid != null and issuecountryid != ''"> and issuecountryid=#{issuecountryid}</if>
+          	<if test="issueindustryid != null and issueindustryid != ''"> and issueindustryid=#{issueindustryid}</if>
+          	<if test="ratingtype != null and ratingtype != ''"> and ratingtype=#{ratingtype}</if>
+          	<if test="ratinglevel != null and ratinglevel != ''"> and ratinglevel=#{ratinglevel}</if>
+          	<if test="versionnum != null and versionnum != ''"> and versionnum=#{versionnum}</if>
+          	<if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+          	<if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+          	<if test="islock != null and islock != ''"> and islock=#{islock}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getReleaseinfoList" resultType="com.tpfh.fintech.modules.pmjk.releaseinfo.entity.ReleaseinfoEntity">
+        select <include refid="allColumns"/> from pmjk_releaseinfo
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="productid != null and productid != ''"> and productid=#{productid}</if>
+            <if test="issuesecurity != null and issuesecurity != ''"> and issuesecurity=#{issuesecurity}</if>
+            <if test="issueway != null and issueway != ''"> and issueway=#{issueway}</if>
+            <if test="issuemarketid != null and issuemarketid != ''"> and issuemarketid=#{issuemarketid}</if>
+            <if test="issuemarketname != null and issuemarketname != ''"> and issuemarketname=#{issuemarketname}</if>
+            <if test="issueid != null and issueid != ''"> and issueid=#{issueid}</if>
+            <if test="issuecountryid != null and issuecountryid != ''"> and issuecountryid=#{issuecountryid}</if>
+            <if test="issueindustryid != null and issueindustryid != ''"> and issueindustryid=#{issueindustryid}</if>
+            <if test="ratingtype != null and ratingtype != ''"> and ratingtype=#{ratingtype}</if>
+            <if test="ratinglevel != null and ratinglevel != ''"> and ratinglevel=#{ratinglevel}</if>
+            <if test="versionnum != null and versionnum != ''"> and versionnum=#{versionnum}</if>
+            <if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+            <if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+            <if test="islock != null and islock != ''"> and islock=#{islock}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addReleaseinfo" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_releaseinfo (<include refid="exceptIdColumns"/>)
+        values(
+                #{productid},
+                #{issuesecurity},
+                #{issueway},
+                #{issuemarketid},
+                #{issuemarketname},
+                #{issueid},
+                #{issuecountryid},
+                #{issueindustryid},
+                #{ratingtype},
+                #{ratinglevel},
+                #{versionnum},
+                #{createtimestamp},
+                #{updatetimestamp},
+                #{islock}        );
+    </insert>
+
+    
+</mapper>

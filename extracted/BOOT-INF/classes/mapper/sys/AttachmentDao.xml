@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.sys.dao.SysAttachmentDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            code,
+            src_file_name,
+            dest_file_name,
+            file_path,
+            url_path,
+            upload_time,
+            upload_user    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                code,
+                src_file_name,
+                dest_file_name,
+                file_path,
+                url_path,
+                upload_time,
+                upload_user    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getAttachmentListForPage" resultType="com.tpfh.fintech.modules.sys.entity.SysAttachmentEntity">
+		 select <include refid="allColumns"/> from sys_attachment
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="code != null and code != ''"> and code=#{code}</if>
+          	<if test="srcFileName != null and srcFileName != ''"> and src_file_name=#{srcFileName}</if>
+          	<if test="destFileName != null and destFileName != ''"> and dest_file_name=#{destFileName}</if>
+          	<if test="filePath != null and filePath != ''"> and file_path=#{filePath}</if>
+          	<if test="urlPath != null and urlPath != ''"> and url_path=#{urlPath}</if>
+          	<if test="uploadTime != null and uploadTime != ''"> and upload_time=#{uploadTime}</if>
+          	<if test="uploadUser != null and uploadUser != ''"> and upload_user=#{uploadUser}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getAttachmentList" resultType="com.tpfh.fintech.modules.sys.entity.SysAttachmentEntity">
+        select <include refid="allColumns"/> from sys_attachment
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="code != null and code != ''"> and code=#{code}</if>
+            <if test="srcFileName != null and srcFileName != ''"> and src_file_name=#{srcFileName}</if>
+            <if test="destFileName != null and destFileName != ''"> and dest_file_name=#{destFileName}</if>
+            <if test="filePath != null and filePath != ''"> and file_path=#{filePath}</if>
+            <if test="urlPath != null and urlPath != ''"> and url_path=#{urlPath}</if>
+            <if test="uploadTime != null and uploadTime != ''"> and upload_time=#{uploadTime}</if>
+            <if test="uploadUser != null and uploadUser != ''"> and upload_user=#{uploadUser}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addAttachment" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into sys_attachment (<include refid="exceptIdColumns"/>)
+        values(
+                #{code},
+                #{srcFileName},
+                #{destFileName},
+                #{filePath},
+                #{urlPath},
+                #{uploadTime},
+                #{uploadUser}        );
+    </insert>
+
+    
+</mapper>

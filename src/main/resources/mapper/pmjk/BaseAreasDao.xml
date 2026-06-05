@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.baseAreas.dao.BaseAreasDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            name,
+            code,
+            levelnum    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                name,
+                code,
+                levelnum    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getBaseAreasListForPage" resultType="com.tpfh.fintech.modules.pmjk.baseAreas.entity.BaseAreasEntity">
+		 select <include refid="allColumns"/> from pmjk_base_areas
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="name != null and name != ''"> and name=#{name}</if>
+          	<if test="code != null and code != ''"> and code=#{code}</if>
+          	<if test="levelnum != null and levelnum != ''"> and levelnum=#{levelnum}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getBaseAreasList" resultType="com.tpfh.fintech.modules.pmjk.baseAreas.entity.BaseAreasEntity">
+        select <include refid="allColumns"/> from pmjk_base_areas
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="name != null and name != ''"> and name=#{name}</if>
+            <if test="code != null and code != ''"> and code=#{code}</if>
+            <if test="levelnum != null and levelnum != ''"> and levelnum=#{levelnum}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addBaseAreas" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_base_areas (<include refid="exceptIdColumns"/>)
+        values(
+                #{name},
+                #{code},
+                #{levelnum}        );
+    </insert>
+
+    
+</mapper>

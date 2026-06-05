@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tpfh.fintech.modules.sys.dao.SysDeptDao">
+
+	<select id="queryObject" resultType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		select d.* ,(select p.name from sys_dept p where p.dept_id = d.parent_id) as parentName from sys_dept d where d.dept_id = #{value} and d.del_flag = 0
+	</select>
+	<select id="getDeptByName" resultType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		select * from sys_dept where name = #{value} and del_flag = 0
+	</select>
+
+	<select id="getDepts" resultType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		select dept_id,parent_id,name from sys_dept where del_flag = 0
+	</select>
+
+
+	<select id="queryList" resultType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		SELECT sd.*, psd.name AS parentName
+		FROM (
+			SELECT dept_id
+			from sys_dept 
+			where del_flag = 0 
+			      and path like (select '%$' || dept_id || '$%' from sys_user u where user_id = #{userId})
+		)a 
+		LEFT JOIN sys_dept sd on a.dept_id=sd.dept_id
+		LEFT JOIN sys_dept psd on sd.parent_id = psd.dept_id
+		ORDER BY sd.order_num, sd.dept_id
+	</select>
+	
+	<select id="getAllDeptList" resultType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		SELECT sd.*, psd.name AS parentName
+		FROM (
+			SELECT dept_id
+			from sys_dept 
+			where del_flag = 0 and path like '%$1$%'
+		)a 
+		LEFT JOIN sys_dept sd on a.dept_id=sd.dept_id
+		LEFT JOIN sys_dept psd on sd.parent_id = psd.dept_id
+		ORDER BY sd.order_num, sd.dept_id
+	</select> 
+	<insert id="save" parameterType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity" useGeneratedKeys="true" keyProperty="deptId">
+		insert into sys_dept
+		(
+			parent_id, 
+			order_num,
+			name,
+			contacts,
+			business_id,
+			path,
+		)
+		values
+		(
+			#{parentId}, 
+			#{orderNum},
+			#{name}, 
+			#{contacts}, 
+			#{businessId},
+			#{path}
+		)
+	</insert>
+	
+	<select id="queryDetpIdList" resultType="String">
+		select dept_id from sys_dept where parent_id = #{value} and del_flag = 0
+	</select>
+	
+	<update id="updateDeptByDeptId" parameterType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		update sys_dept
+		<set>
+			<if test="parentId != null">parent_id = #{parentId}, </if>
+			<if test="name != null">name = #{name}, </if>
+			<if test="orderNum != null">order_num = #{orderNum},</if>
+			<if test="businessId != null">business_id = #{businessId},</if>
+			<if test="contacts != null">contacts = #{contacts}</if>
+		</set>		
+		 where dept_id = #{deptId}
+	</update>
+	<update id="updateOrg">
+		delete from  sys_dept where dept_id!='1';
+		INSERT into sys_dept 
+		select DISTINCT t.pt_code as dept_id, '1' as parent_id, t.pt_name as name, 
+		t.pt_master_code as contacts, 0 as order_num, 0 as del_flag from tb_org t order by t.pt_code;
+		INSERT into sys_dept 
+		select DISTINCT t.xw_code as dept_id, t.pt_code as parent_id, t.xw_name as name, 
+		t.xw_master_code as contacts, 0 as order_num, 0 as del_flag from tb_org t order by t.pt_code, t.xw_code;
+	</update>
+	
+	<select id="getDeptsList" resultType="com.tpfh.fintech.modules.sys.entity.SysDeptEntity">
+		SELECT * FROM sys_dept where parent_id is not null and parent_id !=1 and del_flag=0;
+	</select>
+
+</mapper>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.cashflowdata.dao.CashflowdataDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            productshortname,
+            txamount,
+            txdate,
+            txtype,
+            currency,
+            beneficiary,
+            interate,
+            integain,
+            startdate,
+            enddate,
+            remark    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                productshortname,
+                txamount,
+                txdate,
+                txtype,
+                currency,
+                beneficiary,
+                interate,
+                integain,
+                startdate,
+                enddate,
+                remark    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getCashflowdataListForPage" resultType="com.tpfh.fintech.modules.pmjk.cashflowdata.entity.CashflowdataEntity">
+		 select <include refid="allColumns"/> from pmjk_cashflowdata
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="productshortname != null and productshortname != ''"> and productshortname=#{productshortname}</if>
+          	<if test="txamount != null and txamount != ''"> and txamount=#{txamount}</if>
+          	<if test="txdate != null and txdate != ''"> and txdate=#{txdate}</if>
+          	<if test="txtype != null and txtype != ''"> and txtype=#{txtype}</if>
+          	<if test="currency != null and currency != ''"> and currency=#{currency}</if>
+          	<if test="beneficiary != null and beneficiary != ''"> and beneficiary=#{beneficiary}</if>
+          	<if test="interate != null and interate != ''"> and interate=#{interate}</if>
+          	<if test="integain != null and integain != ''"> and integain=#{integain}</if>
+          	<if test="startdate != null and startdate != ''"> and startdate=#{startdate}</if>
+          	<if test="enddate != null and enddate != ''"> and enddate=#{enddate}</if>
+          	<if test="remark != null and remark != ''"> and remark=#{remark}</if> 
+		</where>
+	</select>
+	
+	<!--组装认购情况的报表-->
+	<select id="getBuyRatio" resultType="com.tpfh.fintech.modules.pmjk.cashflowdata.entity.CashflowdataVO">
+		select  l.beneficiary, l.subtotal, r.total, 100*(l.subtotal/r.total ) as ratio
+		from (
+		   SELECT  
+		    PRODUCTSHORTNAME,
+		    BENEFICIARY,
+		    sum(TXAMOUNT) as subtotal
+		    
+		  FROM PMJK_CASHFLOWDATA where productshortname = #{productshortname} and txtype='理财买入'
+		  group by PRODUCTSHORTNAME, BENEFICIARY
+		) l inner join (
+		      SELECT  
+		    PRODUCTSHORTNAME,
+		    sum(TXAMOUNT) as total
+		  FROM PMJK_CASHFLOWDATA where productshortname =  #{productshortname} and txtype='理财买入'
+		  group by PRODUCTSHORTNAME
+		) r on l.productshortname = r.productshortname  
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getCashflowdataList" resultType="com.tpfh.fintech.modules.pmjk.cashflowdata.entity.CashflowdataEntity">
+        select <include refid="allColumns"/> from pmjk_cashflowdata
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="productshortname != null and productshortname != ''"> and productshortname=#{productshortname}</if>
+            <if test="txamount != null and txamount != ''"> and txamount=#{txamount}</if>
+            <if test="txdate != null and txdate != ''"> and txdate=#{txdate}</if>
+            <if test="txtype != null and txtype != ''"> and txtype=#{txtype}</if>
+            <if test="currency != null and currency != ''"> and currency=#{currency}</if>
+            <if test="beneficiary != null and beneficiary != ''"> and beneficiary=#{beneficiary}</if>
+            <if test="interate != null and interate != ''"> and interate=#{interate}</if>
+            <if test="integain != null and integain != ''"> and integain=#{integain}</if>
+            <if test="startdate != null and startdate != ''"> and startdate=#{startdate}</if>
+            <if test="enddate != null and enddate != ''"> and enddate=#{enddate}</if>
+            <if test="remark != null and remark != ''"> and remark=#{remark}</if> 
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addCashflowdata" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_cashflowdata (<include refid="exceptIdColumns"/>)
+        values(
+                #{productshortname},
+                #{txamount},
+                #{txdate},
+                #{txtype},
+                #{currency},
+                #{beneficiary},
+                #{interate},
+                #{integain},
+                #{startdate},
+                #{enddate},
+                #{remark}       );
+    </insert>
+
+    
+</mapper>

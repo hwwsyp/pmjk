@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.creditenhance.dao.CreditenhanceDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            productid,
+            createtimestamp,
+            updatetimestamp,
+            islock,
+            versionnum,
+            id,
+            type,
+            description,
+            juniortypedesc,
+            othertypedesc    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                productid,
+                createtimestamp,
+                updatetimestamp,
+                islock,
+                versionnum,
+                type,
+                description,
+                juniortypedesc,
+                othertypedesc    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getCreditenhanceListForPage" resultType="com.tpfh.fintech.modules.pmjk.creditenhance.entity.CreditenhanceEntity">
+		 select <include refid="allColumns"/> from pmjk_creditenhance
+		<where>
+          	<if test="productid != null and productid != ''"> and productid=#{productid}</if>
+          	<if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+          	<if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+          	<if test="islock != null and islock != ''"> and islock=#{islock}</if>
+          	<if test="versionnum != null and versionnum != ''"> and versionnum=#{versionnum}</if>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="type != null and type != ''"> and type=#{type}</if>
+          	<if test="description != null and description != ''"> and description=#{description}</if>
+          	<if test="juniortypedesc != null and juniortypedesc != ''"> and juniortypedesc=#{juniortypedesc}</if>
+          	<if test="othertypedesc != null and othertypedesc != ''"> and othertypedesc=#{othertypedesc}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getCreditenhanceList" resultType="com.tpfh.fintech.modules.pmjk.creditenhance.entity.CreditenhanceEntity">
+        select <include refid="allColumns"/> from pmjk_creditenhance
+        <where>
+            <if test="productid != null and productid != ''"> and productid=#{productid}</if>
+            <if test="createtimestamp != null and createtimestamp != ''"> and createtimestamp=#{createtimestamp}</if>
+            <if test="updatetimestamp != null and updatetimestamp != ''"> and updatetimestamp=#{updatetimestamp}</if>
+            <if test="islock != null and islock != ''"> and islock=#{islock}</if>
+            <if test="versionnum != null and versionnum != ''"> and versionnum=#{versionnum}</if>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="type != null and type != ''"> and type=#{type}</if>
+            <if test="description != null and description != ''"> and description=#{description}</if>
+            <if test="juniortypedesc != null and juniortypedesc != ''"> and juniortypedesc=#{juniortypedesc}</if>
+            <if test="othertypedesc != null and othertypedesc != ''"> and othertypedesc=#{othertypedesc}</if>
+        </where>
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addCreditenhance" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_creditenhance (<include refid="exceptIdColumns"/>)
+        values(
+                #{productid},
+                #{createtimestamp},
+                #{updatetimestamp},
+                #{islock},
+                #{versionnum},
+                #{type},
+                #{description},
+                #{juniortypedesc},
+                #{othertypedesc}        );
+    </insert>
+
+    
+</mapper>

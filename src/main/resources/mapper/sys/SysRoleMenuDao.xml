@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tpfh.fintech.modules.sys.dao.SysRoleMenuDao">
+
+	<select id="queryMenuIdList" resultType="long">
+		<!--select menu_id from sys_role_menu where role_id = #{value}-->
+		<!-- modify by owen in 20230630 这里仅查询出最后叶子节点，避免前端el-tree组件，因为获得了父节点，而直接全选了所有叶子节点，
+		   从而造成权限的误解 -->
+		select rm.menu_id 
+		from sys_role_menu rm inner join sys_menu m on rm.menu_id = m.menu_id
+		left join sys_menu mm on rm.menu_id = mm.parent_id
+		where rm.role_id = #{value} and m.parent_id  != 0 and mm.parent_id is null 
+	</select>
+
+	<delete id="deleteBatch">
+		delete from sys_role_menu where role_id in
+		<foreach item="roleId" collection="array" open="(" separator=","
+			close=")">
+			#{roleId}
+		</foreach>
+	</delete>
+
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.baseOrgobject.dao.BaseOrgobjectDao">
+
+    <!--表所有的列名集合-->
+    <sql id="allColumns">
+            id,
+            orgname,
+            objecttype,
+            description,
+            unittype,
+            userid,
+            inservice,
+            orgid    </sql>
+
+    <!--除去主键id的所有列名集合-->
+    <sql id="exceptIdColumns">
+                orgname,
+                objecttype,
+                description,
+                unittype,
+                userid,
+                inservice,
+                orgid    </sql>
+    
+    <!-- 查询分页信息 -->
+    <select id="getBaseOrgobjectListForPage" resultType="com.tpfh.fintech.modules.pmjk.baseOrgobject.entity.BaseOrgobjectEntity">
+		 select <include refid="allColumns"/> from pmjk_base_orgobject
+		<where>
+          	<if test="id != null and id != ''"> and id=#{id}</if>
+          	<if test="orgname != null and orgname != ''"> and orgname=#{orgname}</if>
+          	<if test="objecttype != null and objecttype != ''"> and objecttype=#{objecttype}</if>
+          	<if test="description != null and description != ''"> and description=#{description}</if>
+          	<if test="unittype != null and unittype != ''"> and unittype=#{unittype}</if>
+          	<if test="userid != null and userid != ''"> and userid=#{userid}</if>
+          	<if test="inservice != null and inservice != ''"> and inservice=#{inservice}</if>
+          	<if test="orgid != null and orgid != ''"> and orgid=#{orgid}</if>
+		</where>
+	</select>
+
+    <!--查询符合条件的信息列表-->
+    <select id="getBaseOrgobjectList" resultType="com.tpfh.fintech.modules.pmjk.baseOrgobject.entity.BaseOrgobjectEntity">
+        select <include refid="allColumns"/> from pmjk_base_orgobject
+        <where>
+            <if test="id != null and id != ''"> and id=#{id}</if>
+            <if test="orgname != null and orgname != ''"> and orgname=#{orgname}</if>
+            <if test="objecttype != null and objecttype != ''"> and objecttype=#{objecttype}</if>
+            <if test="description != null and description != ''"> and description=#{description}</if>
+            <if test="unittype != null and unittype != ''"> and unittype=#{unittype}</if>
+            <if test="userid != null and userid != ''"> and userid=#{userid}</if>
+            <if test="inservice != null and inservice != ''"> and inservice=#{inservice}</if>
+            <if test="orgid != null and orgid != ''"> and orgid=#{orgid}</if>
+        </where>
+    </select>
+    
+    <!--根据给定的orgid列表，查询对应的所有用户或机构信息-->
+    <select id="getBaseOrgobjectListByOrgids" resultType="com.tpfh.fintech.modules.pmjk.baseOrgobject.entity.BaseOrgobjectEntity">
+        
+        <if test="orgids != null and !orgids.isEmpty()"> 
+        
+        	select <include refid="allColumns"/> from pmjk_base_orgobject where 
+        	 orgid IN 
+		      <foreach collection="orgids" item="id" open="(" separator="," close=")">
+		        #{id}  <!-- MyBatis自动处理字符串引号 -->
+		      </foreach>
+        
+        </if>
+        
+    </select>
+
+	<!-- 新增实体信息 -->
+    <insert id="addBaseOrgobject" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+        insert into pmjk_base_orgobject (<include refid="exceptIdColumns"/>)
+        values(
+                #{orgname},
+                #{objecttype},
+                #{description},
+                #{unittype},
+                #{userid},
+                #{inservice},
+                #{orgid}        );
+    </insert>
+
+    
+</mapper>
