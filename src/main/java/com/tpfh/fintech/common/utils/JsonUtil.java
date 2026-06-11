@@ -17,10 +17,10 @@ public final class JsonUtil {
 	 */
 	private static ValueFilter filter = new ValueFilter() {
 		@Override
-		public Object process(Object obj, String s, Object v) {
-			if (v == null)
+		public Object apply(Object obj, String name, Object value) {
+			if (value == null)
 				return "";
-			return v;
+			return value;
 		}
 	};
 	private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
