@@ -2,7 +2,7 @@
  * Decompiled with CFR 0.152.
  * 
  * Could not load the following classes:
- *  com.alibaba.fastjson.JSONObject
+ *  com.alibaba.fastjson2.JSONObject
  *  org.apache.shiro.authz.annotation.RequiresPermissions
  *  org.springframework.beans.factory.annotation.Autowired
  *  org.springframework.beans.factory.annotation.Value
@@ -17,7 +17,7 @@
  */
 package com.tpfh.fintech.modules.pmjk.rating.controller;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.tpfh.fintech.common.annotation.SysLog;
 import com.tpfh.fintech.common.utils.DateUtils;
 import com.tpfh.fintech.common.utils.PageUtils;

@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.google.common.base.Charsets;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -79,7 +79,7 @@ public class CSVReadDataFromFileTemplate<T> extends ReadDataFromFileTemplate<T>{
 				json.put(ecttfm.getFieldName(), obj);
 			}
 			//利用Alibaba的JSON方法解析出对应的实体实例
-			T t = json.toJavaObject(clazz);
+			T t = json.to(clazz);
 			list.add(t);
 		}
 		

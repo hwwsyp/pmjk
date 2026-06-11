@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.tpfh.fintech.common.annotation.SysLog;
 import com.tpfh.fintech.common.utils.DateUtils;
 import com.tpfh.fintech.common.utils.PageUtils;

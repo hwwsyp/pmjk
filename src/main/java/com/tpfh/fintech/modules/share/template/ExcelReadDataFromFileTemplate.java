@@ -17,7 +17,7 @@ import org.apache.poi.ss.util.NumberToTextConverter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 
 import cn.hutool.core.util.ArrayUtil;
 
@@ -111,7 +111,7 @@ public class ExcelReadDataFromFileTemplate<T> extends ReadDataFromFileTemplate<T
 				json.put(ecttfm.getFieldName(), obj);
 			}
 			
-			T t = json.toJavaObject(clazz);
+			T t = json.to(clazz);
 			list.add(t);
 		}
 

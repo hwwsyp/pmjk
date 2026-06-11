@@ -1,13 +1,10 @@
 package com.tpfh.fintech.common.utils;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.alibaba.fastjson.serializer.SimpleDateFormatSerializer;
-import com.alibaba.fastjson.serializer.ValueFilter;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
+import com.alibaba.fastjson2.filter.Filter;
+import com.alibaba.fastjson2.filter.ValueFilter;
 
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,17 +23,11 @@ public final class JsonUtil {
 			return v;
 		}
 	};
-	private static SerializerFeature[]  feature={
-		//解决FastJson循环引用的问题
-		SerializerFeature.DisableCircularReferenceDetect,
-		//输出值为null的字段
-		SerializerFeature.WriteMapNullValue
-		}; 
-	private static SerializeConfig mapping = new SerializeConfig();
-	static {
-		mapping.put(Date.class, new SimpleDateFormatSerializer("yyyy-MM-dd HH:mm:ss"));
-		mapping.put(Timestamp.class, new SimpleDateFormatSerializer("yyyy-MM-dd HH:mm:ss"));//数据库的一个时间类型
-	}
+	private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	private static JSONWriter.Feature[] feature = {
+		JSONWriter.Feature.WriteMapNullValue
+	};
+
 	/**
 	 * 将对象转换成JSON字符串 --固定时间格式"yyyy-MM-dd HH:mm:ss"
 	 * @param BO/VO,map,数组,list 对象
@@ -44,7 +35,7 @@ public final class JsonUtil {
 	 * @说明：对bean中有Date类型的数据可以成功转换成yyyy-MM-dd HH:mm:ss格式的时间类型,例如："barDate":yyyy-MM-dd HH:mm:ss
 	 */
 	public static String getJsonByObj(Object bean) {
-		return getJsonByObj(bean,mapping);
+		return getJsonByObj(bean, DEFAULT_DATE_FORMAT);
 	}
 	/**
 	 * 将对象转换成JSON字符串 --特定时间格式--所有Key为小写
@@ -54,9 +45,9 @@ public final class JsonUtil {
 	 * @说明：对bean中有Date类型的数据可以成功转换成yyyy-MM-dd HH:mm:ss格式的时间类型,例如："barDate":yyyy-MM-dd HH:mm:ss
 	 */
 	public static String getJsonByObj(Object bean,String dateType) {
-		SerializeConfig zdymapping=new SerializeConfig();
-		zdymapping.put(Date.class, new SimpleDateFormatSerializer(dateType));
-		return getJsonByObj(bean,zdymapping);
+		String json = JSON.toJSONString(bean, dateType, new Filter[]{filter}, feature);
+		json = stringToJson(json);
+		return json;
 	}
 	/**
 	 * 将对象转换成JSON字符串 ---效率高一些--不处理key 也不处理循环引用的问题--也不处理时间格式
@@ -97,17 +88,6 @@ public final class JsonUtil {
 	public static <T> T getObjet(String json,Class<T> calzz) {
 		return JSON.parseObject(json, calzz) ;
 	}
-	/***
-	 * 通用封装--获取json字符串
-	 * @param bean 对象
-	 * @param mappingx 时间类型计划等
-	 * @return
-	 */
-	private static String getJsonByObj(Object bean,SerializeConfig mappingx){
-		String json=JSON.toJSONString(bean,mappingx,filter,feature);
-		json=stringToJson(json);
-		return json; //所有Key为小写
-	}
 
 	/**
 	 * 当文本中含有如下特殊字符时，此方法可以成功处理，让其在前台被正确解析，注意：此法不能处理单引号
@@ -119,28 +99,25 @@ public final class JsonUtil {
 		for (int i=0; i<s.length(); i++) {
 			char c = s.charAt(i);
 			switch (c) {
-				/*case '\"':
-					sb.append("\\\"");
-					break;*/
-               case '\\':   //如果不处理单引号，可以释放此段代码，若结合下面的方法处理单引号就必须注释掉该段代码
+               case '\\':
                   sb.append("\\\\");
                   break;
 				case '/':
 					sb.append("\\/");
 					break;
-				case '\b':      //退格
+				case '\b':
 					sb.append("\\b");
 					break;
-				case '\f':      //走纸换页
+				case '\f':
 					sb.append("\\f");
 					break;
 				case '\n':
-					sb.append("\\n"); //换行
+					sb.append("\\n");
 					break;
-				case '\r':      //回车
+				case '\r':
 					sb.append("\\r");
 					break;
-				case '\t':      //横向跳格
+				case '\t':
 					sb.append("\\t");
 					break;
 				default:

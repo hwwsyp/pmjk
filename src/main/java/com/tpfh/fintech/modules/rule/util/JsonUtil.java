@@ -1,8 +1,8 @@
 package com.tpfh.fintech.modules.rule.util;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * JSON工具类，封装了com.alibaba.fastjson.JSON
+ * JSON工具类，封装了com.alibaba.fastjson2.JSON
  */
 public final class JsonUtil {
     /**
@@ -27,13 +27,13 @@ public final class JsonUtil {
      * 将JSON字符串反序列化为Java对象。
      *
      * @param <T>      泛型
-     * @param json     com.alibaba.fastjson.JSON对象
+     * @param json     com.alibaba.fastjson2.JSONObject对象
      * @param classOfT 类的泛型，用于简单类型的反序列化。
      *                 <p><strong>参数类型：</strong>xxx.class</p>
      * @return Java对象
      */
-    public static <T> T fromJson(final JSON json, final Class<T> classOfT) {
-        return JSON.toJavaObject(json, classOfT);
+    public static <T> T fromJson(final JSONObject json, final Class<T> classOfT) {
+        return json.to(classOfT);
     }
 
     /**
@@ -54,7 +54,7 @@ public final class JsonUtil {
      *
      * @param <T>     泛型
      * @param json    JSON字符串
-     * @param typeOfT 包含泛型类型。 com.alibaba.fastjson.TypeReference；
+     * @param typeOfT 包含泛型类型。 com.alibaba.fastjson2.TypeReference；
      *                <p><strong>参数类型：</strong>java.lang.reflect.Type typeOfT = new TypeReference&lt;T&gt;(){}.getType();</p>
      * @return Java对象 <ol><li>json字符串为空时返回null；<li>json字符串为无效JSON格式时，会输出log日志，返回null；</li></ol>
      */
@@ -84,7 +84,7 @@ public final class JsonUtil {
      *
      * @param <T>     泛型
      * @param is      JSON输入流
-     * @param typeOfT 包含泛型类型。 com.alibaba.fastjson.TypeReference；
+     * @param typeOfT 包含泛型类型。 com.alibaba.fastjson2.TypeReference；
      *                <p><strong>参数类型：</strong>java.lang.reflect.Type typeOfT = new TypeReference&lt;T&gt;(){}.getType();</p>
      * @return Java对象 <ol><li>json字符串为空时返回null；<li>json字符串为无效JSON格式时，会输出log日志，返回null；</li></ol>
      * @throws IOException 读取数据流异常
@@ -126,7 +126,7 @@ public final class JsonUtil {
      * @param features 序列化选项
      * @return JSON字符串
      */
-    public static String toJson(final Object obj, final SerializerFeature... features) {
+    public static String toJson(final Object obj, final JSONWriter.Feature... features) {
         if (null == obj)
             return null;
         return JSON.toJSONString(obj, features);
@@ -140,7 +140,7 @@ public final class JsonUtil {
      * @return JSON字符串
      */
     public static String toJsonNoRef(final Object obj) {
-        return toJson(obj, SerializerFeature.DisableCircularReferenceDetect);
+        return toJson(obj);
     }
 
     /**
@@ -155,9 +155,9 @@ public final class JsonUtil {
      * @return JSON字符串
      */
     public static String toJsonWriteNull(final Object obj) {
-        return toJson(obj, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteNullNumberAsZero,
-                SerializerFeature.WriteNullListAsEmpty, SerializerFeature.WriteNullStringAsEmpty,
-                SerializerFeature.WriteNullBooleanAsFalse);
+        return toJson(obj, JSONWriter.Feature.WriteMapNullValue, JSONWriter.Feature.WriteNullNumberAsZero,
+                JSONWriter.Feature.WriteNullListAsEmpty, JSONWriter.Feature.WriteNullStringAsEmpty,
+                JSONWriter.Feature.WriteNullBooleanAsFalse);
     }
 
     /**

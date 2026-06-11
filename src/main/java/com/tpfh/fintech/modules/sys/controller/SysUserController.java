@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.tpfh.fintech.common.annotation.SysLog;
 import com.tpfh.fintech.common.utils.AESDecryptorUtil;
 import com.tpfh.fintech.common.utils.Constant;
@@ -147,7 +147,7 @@ public class SysUserController extends AbstractController {
 	@PostMapping("/save")
 	@RequiresPermissions("sys:user:save")
 	public R save(@RequestBody JSONObject userJSON ){
-		SysUserEntity user = JSON.toJavaObject(userJSON, SysUserEntity.class);
+		SysUserEntity user = userJSON.to(SysUserEntity.class);
 		ValidatorUtils.validateEntity(user, AddGroup.class); 
 
 		//add by owen in 20260511 因为要求新增用户第一次登录时需要修改个人密码，保证高强度，为此我们简单处理，利用用户状态位，
