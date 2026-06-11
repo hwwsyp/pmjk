@@ -15,8 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
+import com.tpfh.fintech.common.exception.TpfhException;
 import com.tpfh.fintech.common.utils.AESDecryptorUtil;
 import com.tpfh.fintech.common.utils.PageUtils;
+import com.tpfh.fintech.common.validator.PasswordValidator;
 import com.tpfh.fintech.modules.sys.dao.SysUserDao;
 import com.tpfh.fintech.modules.sys.entity.SysDeptEntity;
 import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
@@ -93,15 +95,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
 			if(StringUtils.isBlank(user.getPassword())){
 				user.setPassword(null);
 			}else{
-
-				//add by owen in 20260520 解密
-				String encryptedData = user.getPassword(); // Base64格式的加密数据
-				String key = "jk%fdsa2QERX_2+2"; // 16字节密钥（128位）
-				String iv = "1iopi7&FDS123456"; // 16字节IV
+				String encryptedData = user.getPassword();
+				String key = "jk%fdsa2QERX_2+2";
+				String iv = "1iopi7&FDS123456";
 
 				String password = AESDecryptorUtil.decrypt(encryptedData, key, iv);
-				user.setPassword(new Sha256Hash(password, user.getSalt()).toHex());
+				PasswordValidator.validate(password);
 
+				SysUserEntity dbUser = this.selectById(user.getUserId());
+				user.setPassword(new Sha256Hash(password, dbUser.getSalt()).toHex());
 			}
 			this.updateById(user);
 
@@ -110,8 +112,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
 
 			//保存用户与角色关系
 			sysUserRoleService.saveOrUpdate(user.getUserId(), user.getRoleIdList());
+		}catch (TpfhException e) {
+			throw e;
 		}catch (Exception e) {
-			System.out.println(e);
+			throw new TpfhException("修改用户失败");
 		}
 	}
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import com.tpfh.fintech.common.utils.Constant;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
 import com.tpfh.fintech.common.validator.Assert;
+import com.tpfh.fintech.common.validator.PasswordValidator;
 import com.tpfh.fintech.common.validator.ValidatorUtils;
 import com.tpfh.fintech.common.validator.group.AddGroup;
 import com.tpfh.fintech.common.validator.group.UpdateGroup;
@@ -98,43 +100,35 @@ public class SysUserController extends AbstractController {
 	public R password(@RequestBody PasswordForm form){
 		Assert.isBlank(form.getNewPassword(), "新密码不为能空");
 
-		//add by owen in 20250612 解密
-		String oldEncryptedData = form.getPassword(); // Base64格式的加密数据
-		String newEncryptedData = form.getNewPassword(); // Base64格式的加密数据
+		String oldEncryptedData = form.getPassword();
+		String newEncryptedData = form.getNewPassword();
 
-		String key = "jk%fdsa2QERX_2+2"; // 16字节密钥（128位）
-		String iv = "1iopi7&FDS123456"; // 16字节IV
+		String key = "jk%fdsa2QERX_2+2";
+		String iv = "1iopi7&FDS123456";
 
 		try {
 			String oldPassword = AESDecryptorUtil.decrypt(oldEncryptedData, key, iv);
-			String newPassword = AESDecryptorUtil.decrypt(newEncryptedData, key, iv);
-			System.out.println("解密结果：" + oldPassword + "," + newPassword); // 输出：Hello World!
+			String newPasswordPlain = AESDecryptorUtil.decrypt(newEncryptedData, key, iv);
+			PasswordValidator.validate(newPasswordPlain);
 
-			//sha256加密
 			String password = new Sha256Hash(oldPassword, getUser().getSalt()).toHex();
-			//sha256加密
-			newPassword = new Sha256Hash(newPassword, getUser().getSalt()).toHex();
+			String newPassword = new Sha256Hash(newPasswordPlain, getUser().getSalt()).toHex();
 
-
-			//add by owen in 20260511 为了配合首次登录修改密码的需要，新增用户在首次登录成功后，其用户状态需要改为正常
-			SysUserEntity user = getUser();
-			user.setPassword(null);//这里设置为null，主要是为了编码修改密码。仅仅做状态的修改。
-			user.setStatus(1);
-			sysUserService.update(user);
-
-
-			//更新密码
 			boolean flag = sysUserService.updatePassword(getUserId(), password, newPassword);
 			if(!flag){
 				return R.error("原密码不正确");
 			}
 
+			SysUserEntity user = new SysUserEntity();
+			user.setUserId(getUserId());
+			user.setStatus(1);
+			sysUserService.updateById(user);
+
 			return R.ok();
 		} catch (Exception e) {
-			return R.error("更新密码失败");
+			logger.error(e.getMessage(), e);
+			return R.error(e.getMessage() != null ? e.getMessage() : "更新密码失败");
 		}
-
-
 	}
 
 	/**
@@ -161,25 +155,21 @@ public class SysUserController extends AbstractController {
 		//新增用户时，我们强制改为2状态
 		user.setStatus(2);//表示未修改密码
 
-		//add by owen in 20251128 解密
 		try {
-			String oldEncryptedData = user.getPassword(); // Base64格式的加密数据 
-
-			String key = "jk%fdsa2QERX_2+2"; // 16字节密钥（128位）
-			String iv = "1iopi7&FDS123456"; // 16字节IV
-
-			//对于传输过程的密码进行解密
-			String password = AESDecryptorUtil.decrypt(oldEncryptedData, key, iv);
-
-			//重新加密后保存
-			user.setPassword(password);
+			if(user.getType() != null && user.getType() == 1 && StringUtils.isNotBlank(user.getPassword())){
+				String key = "jk%fdsa2QERX_2+2";
+				String iv = "1iopi7&FDS123456";
+				String password = AESDecryptorUtil.decrypt(user.getPassword(), key, iv);
+				PasswordValidator.validate(password);
+				user.setPassword(password);
+			}
 
 			user.setCreateUserId(getUserId());
 			sysUserService.save(user);
 
 		}catch (Exception e) { 
 			logger.error(e.getMessage(),e);
-			return R.error("保存用户失败");
+			return R.error(e.getMessage() != null ? e.getMessage() : "保存用户失败");
 		}
 
 		return R.ok();

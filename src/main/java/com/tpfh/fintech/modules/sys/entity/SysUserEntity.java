@@ -69,7 +69,7 @@ public class SysUserEntity implements Serializable {
 	private Integer type;
 
 	/**
-	 * 状态  0：禁用   1：正常
+	 * 状态  0：禁用   1：正常   2：初始化（首次登录须修改密码）
 	 */
 	private Integer status;
 	

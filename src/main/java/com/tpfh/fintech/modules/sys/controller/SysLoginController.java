@@ -102,12 +102,11 @@ public class SysLoginController extends AbstractController {
 			    String key = "jk%fdsa2QERX_2+2"; // 16字节密钥（128位）
 			    String iv = "1iopi7&FDS123456"; // 16字节IV
 			    
-			    String decrypted = "";
+			    String decrypted;
 			    try {
 			        decrypted = AESDecryptorUtil.decrypt(encryptedData, key, iv);
-			        System.out.println("解密结果：" + decrypted); // 输出：Hello World!
 			    } catch (Exception e) {
-			        e.printStackTrace();
+			        return R.error("账号或密码不正确");
 			    }
 				
 				
