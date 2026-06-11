@@ -1,40 +1,50 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.ibatis.annotations.Mapper
- *  org.apache.ibatis.annotations.Param
- */
 package com.tpfh.fintech.modules.sys.dao;
 
-import com.tpfh.fintech.modules.sys.entity.SysConfigEntity;
+
 import java.util.List;
 import java.util.Map;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.tpfh.fintech.modules.sys.entity.SysConfigEntity;
+
+/**
+ * 系统配置信息
+ * 
+
+
+ * @date 2016年12月4日 下午6:46:16
+ */
 @Mapper
 public interface SysConfigDao {
-    public List<SysConfigEntity> queryListByKey(String var1);
 
-    public SysConfigEntity queryByKey(String var1);
+	/**
+	 * 根据key，查询value
+	 */
+	List<SysConfigEntity> queryListByKey(String paramKey);
+	
+	SysConfigEntity queryByKey(String paramKey);
 
-    public int updateValueByKey(@Param(value="key") String var1, @Param(value="value") String var2);
+	/**
+	 * 根据key，更新value
+	 */
+	int updateValueByKey(@Param("key") String key, @Param("value") String value);
 
-    public List<SysConfigEntity> queryParentList(@Param(value="value") String var1, @Param(value="key") String var2);
+	List<SysConfigEntity> queryParentList(@Param("value") String id,@Param("key") String key);
 
-    public int validateDictionary(@Param(value="parentValue") String var1, @Param(value="value") String var2);
+	int validateDictionary(@Param("parentValue") String parentValue, @Param("value") String value);
 
-    public void update(SysConfigEntity var1);
+	void update(SysConfigEntity config);
 
-    public void save(SysConfigEntity var1);
+	void save(SysConfigEntity config);
 
-    public void deleteBatch(Long[] var1);
+	void deleteBatch(Long[] ids);
 
-    public List<SysConfigEntity> queryList(Map<String, Object> var1);
+	List<SysConfigEntity> queryList(Map<String, Object> map);
 
-    public int queryTotal(Map<String, Object> var1);
+	int queryTotal(Map<String, Object> map);
 
-    public SysConfigEntity queryObject(Long var1);
+	SysConfigEntity queryObject(Long id);
+	
 }
-

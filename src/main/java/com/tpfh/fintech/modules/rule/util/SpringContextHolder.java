@@ -1,50 +1,65 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.springframework.context.ApplicationContext
- *  org.springframework.context.ApplicationContextAware
- *  org.springframework.stereotype.Component
- */
 package com.tpfh.fintech.modules.rule.util;
 
-import java.util.Map;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
+/**
+ * 描述：
+ * CLASSPATH: com.tpfh.fintech.modules.rule.util.SpringContextHolder
+ * VERSION:   1.0
+ * Created by tpfh
+ * DATE:      2017/7/27
+ */
 @Component
-public class SpringContextHolder
-implements ApplicationContextAware {
+public class SpringContextHolder implements ApplicationContextAware {
     private static ApplicationContext applicationContext;
 
+    /**
+     * 实现ApplicationContextAware接口的context注入函数, 将其存入静态变量.
+     */
     public void setApplicationContext(ApplicationContext applicationContext) {
         SpringContextHolder.applicationContext = applicationContext;
     }
 
+    /**
+     * 取得存储在静态变量中的ApplicationContext.
+     */
     public static ApplicationContext getApplicationContext() {
-        SpringContextHolder.checkApplicationContext();
+        checkApplicationContext();
         return applicationContext;
     }
 
+    /**
+     * 从静态变量ApplicationContext中取得Bean, 自动转型为所赋值对象的类型.
+     */
+    @SuppressWarnings("unchecked")
     public static <T> T getBean(String name) {
-        SpringContextHolder.checkApplicationContext();
-        return (T)applicationContext.getBean(name);
+        checkApplicationContext();
+        return (T) applicationContext.getBean(name);
     }
 
+    /**
+     * 从静态变量ApplicationContext中取得Bean, 自动转型为所赋值对象的类型.
+     * 如果有多个Bean符合Class, 取出第一个.
+     */
+    @SuppressWarnings("unchecked")
     public static <T> T getBean(Class<T> clazz) {
-        SpringContextHolder.checkApplicationContext();
+        checkApplicationContext();
+        @SuppressWarnings("rawtypes")
         Map beanMaps = applicationContext.getBeansOfType(clazz);
-        if (beanMaps != null && !beanMaps.isEmpty()) {
-            return (T)beanMaps.values().iterator().next();
+        if (beanMaps!=null && !beanMaps.isEmpty()) {
+            return (T) beanMaps.values().iterator().next();
+        } else{
+            return null;
         }
-        return null;
     }
 
     private static void checkApplicationContext() {
         if (applicationContext == null) {
-            throw new IllegalStateException("applicaitonContext\u672a\u6ce8\u5165,\u8bf7\u5728applicationContext.xml\u4e2d\u5b9a\u4e49SpringContextHolder");
+            throw new IllegalStateException("applicaitonContext未注入,请在applicationContext.xml中定义SpringContextHolder");
         }
     }
 }
-

@@ -1,38 +1,42 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.mapper.BaseMapper
- *  org.apache.ibatis.annotations.Mapper
- */
 package com.tpfh.fintech.modules.sys.dao;
 
 import com.baomidou.mybatisplus.mapper.BaseMapper;
 import com.tpfh.fintech.modules.sys.entity.SysDeptEntity;
-import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
+/**
+ * 部门管理
+ * 
+
+
+ * @date 2017-06-20 15:23:47
+ */
 @Mapper
-public interface SysDeptDao
-extends BaseMapper<SysDeptEntity> {
-    public List<String> queryDetpIdList(Integer var1);
+public interface SysDeptDao extends BaseMapper<SysDeptEntity>  {
 
-    public SysDeptEntity getDeptByName(String var1);
+    /**
+     * 查询子部门ID列表
+     * @param parentId  上级部门ID
+     */
+    List<String> queryDetpIdList(Integer parentId);
 
-    public void updateDeptByDeptId(SysDeptEntity var1);
+	SysDeptEntity getDeptByName(String name);
+	void updateDeptByDeptId(SysDeptEntity dept);
 
-    public List<SysDeptEntity> getDepts();
+	List<SysDeptEntity> getDepts();
 
-    public List<SysDeptEntity> queryList(SysDeptEntity var1);
+	List<SysDeptEntity> queryList(SysDeptEntity sysDeptEntity);
 
-    public SysDeptEntity queryObject(String var1);
+	SysDeptEntity queryObject(String deptId);
 
-    public void updateOrg();
+	void updateOrg();
 
-    public List<SysDeptEntity> getDeptsList();
+	List<SysDeptEntity> getDeptsList();
 
-    public List<SysDeptEntity> queryList(Long var1);
-
-    public List<SysDeptEntity> getAllDeptList();
+	List<SysDeptEntity> queryList(Long userId);
+	
+	List<SysDeptEntity> getAllDeptList();
 }
-

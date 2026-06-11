@@ -1,53 +1,63 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.mapper.BaseMapper
- *  com.baomidou.mybatisplus.plugins.Page
- *  org.apache.ibatis.annotations.Mapper
- *  org.apache.ibatis.annotations.Param
- *  org.apache.ibatis.annotations.Select
- */
 package com.tpfh.fintech.modules.sys.dao;
 
-import com.baomidou.mybatisplus.mapper.BaseMapper;
-import com.baomidou.mybatisplus.plugins.Page;
-import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import com.baomidou.mybatisplus.mapper.BaseMapper;
+import com.baomidou.mybatisplus.plugins.Page;
+import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
+
+/**
+ * 系统用户
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年9月18日 上午9:34:11
+ */
 @Mapper
-public interface SysUserDao
-extends BaseMapper<SysUserEntity> {
-    public List<String> queryAllPerms(Long var1);
+public interface SysUserDao extends BaseMapper<SysUserEntity> {
+	
+	/**
+	 * 查询用户的所有权限
+	 * @param userId  用户ID
+	 */
+	List<String> queryAllPerms(Long userId);
+	
+	/**
+	 * 查询用户的所有菜单ID
+	 */
+	List<Long> queryAllMenuId(Long userId);
+	
+	/**
+	 * 根据用户名，查询系统用户
+	 */
+	SysUserEntity queryByUserName(String username);
 
-    public List<Long> queryAllMenuId(Long var1);
+	List<SysUserEntity> getUsersList(@Param("word") String word);
 
-    public SysUserEntity queryByUserName(String var1);
+	List<SysUserEntity> getUsersListByDeptId(@Param("deptId") Integer deptId);
 
-    public List<SysUserEntity> getUsersList(@Param(value="word") String var1);
+	List<SysUserEntity> getUsersListByRoleId(@Param("roleId") String roleId);
 
-    public List<SysUserEntity> getUsersListByDeptId(@Param(value="deptId") Integer var1);
+	List<SysUserEntity> getUserList(Page<SysUserEntity> page, HashMap<String, Object> params);
 
-    public List<SysUserEntity> getUsersListByRoleId(@Param(value="roleId") String var1);
+	List<SysUserEntity> getUserList(HashMap<String, String> params);
 
-    public List<SysUserEntity> getUserList(Page<SysUserEntity> var1, HashMap<String, Object> var2);
+	int addUser(Map<String, String> map);
 
-    public List<SysUserEntity> getUserList(HashMap<String, String> var1);
+	void addUserRole(Map<String, String> map);
+	//查询用户的角色
+    @Select("select	group_concat(t2.role_id) roleIds FROM	sys_user t1 left join sys_user_role t2 on t1.user_id = t2.user_id where t1.username = #{parentUserCode} group by t1.user_id")
+	String getParentRoles(@Param("parentUserCode") String parentUserCode);
 
-    public int addUser(Map<String, String> var1);
+	List<SysUserEntity> getAllUsersList();
 
-    public void addUserRole(Map<String, String> var1);
+	//根据工号查询用户基本信息
+	SysUserEntity getUserBaseInfo(@Param("userName")String staffId);
 
-    @Select(value={"select\tgroup_concat(t2.role_id) roleIds FROM\tsys_user t1 left join sys_user_role t2 on t1.user_id = t2.user_id where t1.username = #{parentUserCode} group by t1.user_id"})
-    public String getParentRoles(@Param(value="parentUserCode") String var1);
-
-    public List<SysUserEntity> getAllUsersList();
-
-    public SysUserEntity getUserBaseInfo(@Param(value="userName") String var1);
 }
-

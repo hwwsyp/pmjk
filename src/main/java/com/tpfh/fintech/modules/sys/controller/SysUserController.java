@@ -1,44 +1,9 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.alibaba.fastjson.JSON
- *  com.alibaba.fastjson.JSONObject
- *  org.apache.commons.lang.ArrayUtils
- *  org.apache.shiro.authz.annotation.RequiresPermissions
- *  org.apache.shiro.crypto.hash.Sha256Hash
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.web.bind.annotation.GetMapping
- *  org.springframework.web.bind.annotation.PathVariable
- *  org.springframework.web.bind.annotation.PostMapping
- *  org.springframework.web.bind.annotation.RequestBody
- *  org.springframework.web.bind.annotation.RequestMapping
- *  org.springframework.web.bind.annotation.RequestParam
- *  org.springframework.web.bind.annotation.RestController
- */
 package com.tpfh.fintech.modules.sys.controller;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.tpfh.fintech.common.annotation.SysLog;
-import com.tpfh.fintech.common.utils.AESDecryptorUtil;
-import com.tpfh.fintech.common.utils.Constant;
-import com.tpfh.fintech.common.utils.PageUtils;
-import com.tpfh.fintech.common.utils.R;
-import com.tpfh.fintech.common.validator.Assert;
-import com.tpfh.fintech.common.validator.ValidatorUtils;
-import com.tpfh.fintech.common.validator.group.AddGroup;
-import com.tpfh.fintech.common.validator.group.UpdateGroup;
-import com.tpfh.fintech.modules.sys.controller.AbstractController;
-import com.tpfh.fintech.modules.sys.entity.SysRoleEntity;
-import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
-import com.tpfh.fintech.modules.sys.form.PasswordForm;
-import com.tpfh.fintech.modules.sys.service.SysRoleService;
-import com.tpfh.fintech.modules.sys.service.SysUserRoleService;
-import com.tpfh.fintech.modules.sys.service.SysUserService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.crypto.hash.Sha256Hash;
@@ -51,131 +16,232 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.tpfh.fintech.common.annotation.SysLog;
+import com.tpfh.fintech.common.utils.AESDecryptorUtil;
+import com.tpfh.fintech.common.utils.Constant;
+import com.tpfh.fintech.common.utils.PageUtils;
+import com.tpfh.fintech.common.utils.R;
+import com.tpfh.fintech.common.validator.Assert;
+import com.tpfh.fintech.common.validator.ValidatorUtils;
+import com.tpfh.fintech.common.validator.group.AddGroup;
+import com.tpfh.fintech.common.validator.group.UpdateGroup;
+import com.tpfh.fintech.modules.sys.entity.SysRoleEntity;
+import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
+import com.tpfh.fintech.modules.sys.form.PasswordForm;
+import com.tpfh.fintech.modules.sys.service.SysRoleService;
+import com.tpfh.fintech.modules.sys.service.SysUserRoleService;
+import com.tpfh.fintech.modules.sys.service.SysUserService;
+
+/**
+ * 系统用户
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年10月31日 上午10:40:10
+ */
 @RestController
-@RequestMapping(value={"/sys/user"})
-public class SysUserController
-extends AbstractController {
-    @Autowired
-    private SysUserService sysUserService;
-    @Autowired
-    private SysUserRoleService sysUserRoleService;
-    @Autowired
-    private SysRoleService sysRoleService;
+@RequestMapping("/sys/user")
+public class SysUserController extends AbstractController {
+	@Autowired
+	private SysUserService sysUserService;
+	@Autowired
+	private SysUserRoleService sysUserRoleService;
+	@Autowired
+	private SysRoleService sysRoleService;
 
-    @GetMapping(value={"/list"})
-    @RequiresPermissions(value={"sys:user:list"})
-    public R list(@RequestParam HashMap<String, Object> params) {
-        params.put("userId", this.getUserId());
-        PageUtils page = this.sysUserService.queryPage(params);
-        return R.ok().put("page", (Object)page);
-    }
+	/**
+	 * 所有用户列表
+	 */
+	@GetMapping("/list")
+	@RequiresPermissions("sys:user:list")
+	public R list(@RequestParam HashMap<String,Object> params){
+		//只有超级管理员，才能查看所有管理员列表
+		/*if(getUserId() != Constant.SUPER_ADMIN){
+			params.put("createUserId", getUserId());
+		}*/
+		params.put("userId", getUserId());
+		PageUtils page = sysUserService.queryPage(params);
 
-    @GetMapping(value={"/info"})
-    public R info() {
-        SysUserEntity user = this.getUser();
-        user.setSalt("");
-        user.setPassword("");
-        if (user.getUserId() == Constant.SUPER_ADMIN) {
-            List list = this.sysRoleService.selectByMap(null);
-            ArrayList<Long> roleIdList = new ArrayList<Long>();
-            for (SysRoleEntity role : list) {
-                roleIdList.add(role.getRoleId());
-            }
-            user.setRoleIdList(roleIdList);
-            return R.ok().put("user", (Object)user);
-        }
-        List<Long> roleIdList = this.sysUserRoleService.queryRoleIdList(user.getUserId());
-        user.setRoleIdList(roleIdList);
-        return R.ok().put("user", (Object)user);
-    }
+		return R.ok().put("page", page);
+	}
 
-    @SysLog(value="\u4fee\u6539\u5bc6\u7801")
-    @PostMapping(value={"/password"})
-    public R password(@RequestBody PasswordForm form) {
-        Assert.isBlank(form.getNewPassword(), "\u65b0\u5bc6\u7801\u4e0d\u4e3a\u80fd\u7a7a");
-        String oldEncryptedData = form.getPassword();
-        String newEncryptedData = form.getNewPassword();
-        String key = "jk%fdsa2QERX_2+2";
-        String iv = "1iopi7&FDS123456";
-        try {
-            String oldPassword = AESDecryptorUtil.decrypt(oldEncryptedData, key, iv);
-            String newPassword = AESDecryptorUtil.decrypt(newEncryptedData, key, iv);
-            System.out.println("\u89e3\u5bc6\u7ed3\u679c\uff1a" + oldPassword + "," + newPassword);
-            String password = new Sha256Hash((Object)oldPassword, (Object)this.getUser().getSalt()).toHex();
-            newPassword = new Sha256Hash((Object)newPassword, (Object)this.getUser().getSalt()).toHex();
-            boolean flag = this.sysUserService.updatePassword(this.getUserId(), password, newPassword);
-            if (!flag) {
-                return R.error("\u539f\u5bc6\u7801\u4e0d\u6b63\u786e");
-            }
-            return R.ok();
-        }
-        catch (Exception e) {
-            return R.error("\u66f4\u65b0\u5bc6\u7801\u5931\u8d25");
-        }
-    }
+	/**
+	 * 获取登录的用户信息
+	 */
+	@GetMapping("/info")
+	public R info(){
+		SysUserEntity user = getUser();
+		user.setSalt("");
+		user.setPassword("");
+		//获取用户所属的角色列表
+		if(user.getUserId()== Constant.SUPER_ADMIN){
+			List<SysRoleEntity> list = sysRoleService.selectByMap(null);
+			List<Long> roleIdList = new ArrayList<Long>();
+			for (SysRoleEntity role : list) {
+				roleIdList.add(role.getRoleId());
+			}
+			user.setRoleIdList(roleIdList);
+			return R.ok().put("user", user);
+		}
+		List<Long> roleIdList = sysUserRoleService.queryRoleIdList(user.getUserId());
+		user.setRoleIdList(roleIdList);
+		return R.ok().put("user", user);
+	}
 
-    @GetMapping(value={"/info/{userId}"})
-    public R info(@PathVariable(value="userId") Long userId) {
-        return R.ok().put("user", (Object)this.sysUserService.getUserInfo(userId));
-    }
+	/**
+	 * 修改登录用户密码
+	 */
+	@SysLog("修改密码")
+	@PostMapping("/password")
+	public R password(@RequestBody PasswordForm form){
+		Assert.isBlank(form.getNewPassword(), "新密码不为能空");
 
-    @SysLog(value="\u4fdd\u5b58\u7528\u6237")
-    @PostMapping(value={"/save"})
-    @RequiresPermissions(value={"sys:user:save"})
-    public R save(@RequestBody JSONObject userJSON) {
-        SysUserEntity user = (SysUserEntity)JSON.toJavaObject((JSON)userJSON, SysUserEntity.class);
-        ValidatorUtils.validateEntity(user, AddGroup.class);
-        user.setCreateUserId(this.getUserId());
-        this.sysUserService.save(user);
-        return R.ok();
-    }
+		//add by owen in 20250612 解密
+		String oldEncryptedData = form.getPassword(); // Base64格式的加密数据
+		String newEncryptedData = form.getNewPassword(); // Base64格式的加密数据
 
-    @SysLog(value="\u4fee\u6539\u7528\u6237")
-    @PostMapping(value={"/update"})
-    @RequiresPermissions(value={"sys:user:update"})
-    public R update(@RequestBody SysUserEntity user) {
-        ValidatorUtils.validateEntity(user, UpdateGroup.class);
-        user.setCreateUserId(this.getUserId());
-        this.sysUserService.update(user);
-        return R.ok();
-    }
+		String key = "jk%fdsa2QERX_2+2"; // 16字节密钥（128位）
+		String iv = "1iopi7&FDS123456"; // 16字节IV
 
-    @SysLog(value="\u5220\u9664\u7528\u6237")
-    @PostMapping(value={"/delete"})
-    @RequiresPermissions(value={"sys:user:delete"})
-    public R delete(@RequestBody Long[] userIds) {
-        if (ArrayUtils.contains((Object[])userIds, (Object)1L)) {
-            return R.error("\u7cfb\u7edf\u7ba1\u7406\u5458\u4e0d\u80fd\u5220\u9664");
-        }
-        if (ArrayUtils.contains((Object[])userIds, (Object)this.getUserId())) {
-            return R.error("\u5f53\u524d\u7528\u6237\u4e0d\u80fd\u5220\u9664");
-        }
-        this.sysUserService.deleteBatch(userIds);
-        return R.ok();
-    }
+		try {
+			String oldPassword = AESDecryptorUtil.decrypt(oldEncryptedData, key, iv);
+			String newPassword = AESDecryptorUtil.decrypt(newEncryptedData, key, iv);
+			System.out.println("解密结果：" + oldPassword + "," + newPassword); // 输出：Hello World!
 
-    @RequestMapping(value={"/getUsersList"})
-    public R getUsersList(String word) {
-        List<SysUserEntity> usersList = this.sysUserService.getUsersList(word);
-        return R.ok().put("usersList", (Object)usersList);
-    }
+			//sha256加密
+			String password = new Sha256Hash(oldPassword, getUser().getSalt()).toHex();
+			//sha256加密
+			newPassword = new Sha256Hash(newPassword, getUser().getSalt()).toHex();
 
-    @RequestMapping(value={"/getAllUsersList"})
-    public R getAllUsersList() {
-        List<SysUserEntity> usersList = this.sysUserService.getAllUsersList();
-        return R.ok().put("usersList", (Object)usersList);
-    }
 
-    @RequestMapping(value={"/getUsersListByDeptId"})
-    public R getUsersListByDeptId(Integer deptId) {
-        List<SysUserEntity> usersList = this.sysUserService.getUsersListByDeptId(deptId);
-        return R.ok().put("usersList", (Object)usersList);
-    }
+			//add by owen in 20260511 为了配合首次登录修改密码的需要，新增用户在首次登录成功后，其用户状态需要改为正常
+			SysUserEntity user = getUser();
+			user.setPassword(null);//这里设置为null，主要是为了编码修改密码。仅仅做状态的修改。
+			user.setStatus(1);
+			sysUserService.update(user);
 
-    @RequestMapping(value={"/getUsersListByRoleId"})
-    public R getUsersListByRoleId(String roleId) {
-        List<SysUserEntity> usersList = this.sysUserService.getUsersListByRoleId(roleId);
-        return R.ok().put("usersList", (Object)usersList);
-    }
+
+			//更新密码
+			boolean flag = sysUserService.updatePassword(getUserId(), password, newPassword);
+			if(!flag){
+				return R.error("原密码不正确");
+			}
+
+			return R.ok();
+		} catch (Exception e) {
+			return R.error("更新密码失败");
+		}
+
+
+	}
+
+	/**
+	 * 用户信息
+	 */
+	@GetMapping("/info/{userId}")
+	//@RequiresPermissions("sys:user:info")
+	public R info(@PathVariable("userId") Long userId){
+		return R.ok().put("user", sysUserService.getUserInfo(userId));
+	}
+
+	/**
+	 * 保存用户
+	 */
+	@SysLog("保存用户")
+	@PostMapping("/save")
+	@RequiresPermissions("sys:user:save")
+	public R save(@RequestBody JSONObject userJSON ){
+		SysUserEntity user = JSON.toJavaObject(userJSON, SysUserEntity.class);
+		ValidatorUtils.validateEntity(user, AddGroup.class); 
+
+		//add by owen in 20260511 因为要求新增用户第一次登录时需要修改个人密码，保证高强度，为此我们简单处理，利用用户状态位，
+		//目前状态为1 正常、0 禁用；2 新增用户或者叫未修改密码
+		//新增用户时，我们强制改为2状态
+		user.setStatus(2);//表示未修改密码
+
+		//add by owen in 20251128 解密
+		try {
+			String oldEncryptedData = user.getPassword(); // Base64格式的加密数据 
+
+			String key = "jk%fdsa2QERX_2+2"; // 16字节密钥（128位）
+			String iv = "1iopi7&FDS123456"; // 16字节IV
+
+			//对于传输过程的密码进行解密
+			String password = AESDecryptorUtil.decrypt(oldEncryptedData, key, iv);
+
+			//重新加密后保存
+			user.setPassword(password);
+
+			user.setCreateUserId(getUserId());
+			sysUserService.save(user);
+
+		}catch (Exception e) { 
+			logger.error(e.getMessage(),e);
+			return R.error("保存用户失败");
+		}
+
+		return R.ok();
+	}
+
+	/**
+	 * 修改用户
+	 */
+	@SysLog("修改用户")
+	@PostMapping("/update")
+	@RequiresPermissions("sys:user:update")
+	public R update(@RequestBody SysUserEntity user){
+		ValidatorUtils.validateEntity(user, UpdateGroup.class);
+
+		user.setCreateUserId(getUserId());
+		sysUserService.update(user);
+
+		return R.ok();
+	}
+
+	/**
+	 * 删除用户
+	 */
+	@SysLog("删除用户")
+	@PostMapping("/delete")
+	@RequiresPermissions("sys:user:delete")
+	public R delete(@RequestBody Long[] userIds){
+		if(ArrayUtils.contains(userIds, 1L)){
+			return R.error("系统管理员不能删除");
+		}
+
+		if(ArrayUtils.contains(userIds, getUserId())){
+			return R.error("当前用户不能删除");
+		}
+
+		sysUserService.deleteBatch(userIds);
+
+		return R.ok();
+	}
+
+	@RequestMapping("/getUsersList")
+	public R getUsersList(String word){
+		List<SysUserEntity> usersList=sysUserService.getUsersList(word);
+		return R.ok().put("usersList", usersList);
+	}
+
+	@RequestMapping("/getAllUsersList")
+	public R getAllUsersList(){
+		List<SysUserEntity> usersList=sysUserService.getAllUsersList();
+		return R.ok().put("usersList", usersList);
+	}
+
+	@RequestMapping("/getUsersListByDeptId")
+	public R getUsersListByDeptId(Integer deptId){
+		List<SysUserEntity> usersList=sysUserService.getUsersListByDeptId(deptId);
+		return R.ok().put("usersList", usersList);
+	}
+
+	@RequestMapping("/getUsersListByRoleId")
+	public R getUsersListByRoleId(String roleId){
+		List<SysUserEntity> usersList=sysUserService.getUsersListByRoleId(roleId);
+		return R.ok().put("usersList", usersList);
+	}
+
 }
-

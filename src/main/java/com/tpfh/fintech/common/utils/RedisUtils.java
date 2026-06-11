@@ -1,36 +1,24 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.data.redis.core.HashOperations
- *  org.springframework.data.redis.core.ListOperations
- *  org.springframework.data.redis.core.RedisTemplate
- *  org.springframework.data.redis.core.SetOperations
- *  org.springframework.data.redis.core.StringRedisTemplate
- *  org.springframework.data.redis.core.ValueOperations
- *  org.springframework.data.redis.core.ZSetOperations
- *  org.springframework.stereotype.Component
- */
 package com.tpfh.fintech.common.utils;
 
-import com.tpfh.fintech.common.utils.JsonUtil;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Redis工具类
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-07-17 21:12
+ */
 @Component
 public class RedisUtils {
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+	
+	@Autowired
+	private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
@@ -43,79 +31,87 @@ public class RedisUtils {
     private SetOperations<String, Object> setOperations;
     @Autowired
     private ZSetOperations<String, Object> zSetOperations;
-    public static final long DEFAULT_EXPIRE = 86400L;
-    public static final long NOT_EXPIRE = -1L;
-
+    /**  默认过期时长，单位：秒 */
+    public final static long DEFAULT_EXPIRE = 60 * 60 * 24;
+    /**  不设置过期时长 */
+    public final static long NOT_EXPIRE = -1;
+    
     public Boolean exists(String key) {
-        return this.stringRedisTemplate.hasKey((Object)key);
-    }
+		return stringRedisTemplate.hasKey(key);
+	}
 
-    public void sadd(String key, List<String> values) {
-        this.setOperations.add((Object)key, values.toArray());
-    }
+	public void sadd(String key, List<String> values) {
+		setOperations.add(key, values.toArray());
+	}
 
-    public void saddOne(String key, String values) {
-        this.setOperations.add((Object)key, new Object[]{values});
-    }
+	public void saddOne(String key, String values) {
+		setOperations.add(key, values);
+	}
 
-    public Boolean isMember(String key, String values) {
-        return this.setOperations.isMember((Object)key, (Object)values);
-    }
+	public Boolean isMember(String key, String values) {
+		return setOperations.isMember(key, values);
+	}
+	
+	public void expire(String key, long expire) {
+		if (expire != NOT_EXPIRE) {
+			stringRedisTemplate.expire(key, expire, TimeUnit.SECONDS);
+		}
+	}
 
-    public void expire(String key, long expire) {
-        if (expire != -1L) {
-            this.stringRedisTemplate.expire((Object)key, expire, TimeUnit.SECONDS);
+    public void set(String key, Object value, long expire){
+        valueOperations.set(key, toJson(value));
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
         }
     }
 
-    public void set(String key, Object value, long expire) {
-        this.valueOperations.set((Object)key, (Object)this.toJson(value));
-        if (expire != -1L) {
-            this.redisTemplate.expire((Object)key, expire, TimeUnit.SECONDS);
-        }
-    }
-
-    public void set(String key, Object value) {
-        this.set(key, value, 86400L);
+    public void set(String key, Object value){
+        set(key, value, DEFAULT_EXPIRE);
     }
 
     public <T> T get(String key, Class<T> clazz, long expire) {
-        String value = (String)this.valueOperations.get((Object)key);
-        if (expire != -1L) {
-            this.redisTemplate.expire((Object)key, expire, TimeUnit.SECONDS);
+        String value = valueOperations.get(key);
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
         }
-        return value == null ? null : (T)this.fromJson(value, clazz);
+        return value == null ? null : fromJson(value, clazz);
     }
 
     public <T> T get(String key, Class<T> clazz) {
-        return this.get(key, clazz, -1L);
+        return get(key, clazz, NOT_EXPIRE);
     }
 
     public String get(String key, long expire) {
-        String value = (String)this.valueOperations.get((Object)key);
-        if (expire != -1L) {
-            this.redisTemplate.expire((Object)key, expire, TimeUnit.SECONDS);
+        String value = valueOperations.get(key);
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
         }
         return value;
     }
 
     public String get(String key) {
-        return this.get(key, -1L);
+        return get(key, NOT_EXPIRE);
     }
 
     public void delete(String key) {
-        this.redisTemplate.delete((Object)key);
+        redisTemplate.delete(key);
     }
 
-    private String toJson(Object object) {
-        if (object instanceof Integer || object instanceof Long || object instanceof Float || object instanceof Double || object instanceof Boolean || object instanceof String) {
+    /**
+     * Object转成JSON数据
+     */
+    private String toJson(Object object){
+        if(object instanceof Integer || object instanceof Long || object instanceof Float ||
+                object instanceof Double || object instanceof Boolean || object instanceof String){
             return String.valueOf(object);
         }
         return JsonUtil.getJsonByObj(object);
     }
 
-    private <T> T fromJson(String json, Class<T> clazz) {
+    /**
+     * JSON数据，转成Object
+     */
+    private <T> T fromJson(String json, Class<T> clazz){
         return JsonUtil.getObjet(json, clazz);
     }
 }
-

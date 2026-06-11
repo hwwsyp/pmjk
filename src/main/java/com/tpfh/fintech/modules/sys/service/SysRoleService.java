@@ -1,29 +1,35 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.service.IService
- */
 package com.tpfh.fintech.modules.sys.service;
 
 import com.baomidou.mybatisplus.service.IService;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.sys.entity.SysRoleEntity;
+
 import java.util.List;
 import java.util.Map;
 
-public interface SysRoleService
-extends IService<SysRoleEntity> {
-    public PageUtils queryPage(Map<String, Object> var1);
 
-    public void save(SysRoleEntity var1);
+/**
+ * 角色
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年9月18日 上午9:42:52
+ */
+public interface SysRoleService extends IService<SysRoleEntity> {
 
-    public void update(SysRoleEntity var1);
+	PageUtils queryPage(Map<String, Object> params);
 
-    public void deleteBatch(Long[] var1);
+	void save(SysRoleEntity role);
 
-    public List<Long> queryRoleIdList(Long var1);
+	void update(SysRoleEntity role);
 
-    public List<SysRoleEntity> getRolesList();
+	void deleteBatch(Long[] roleIds);
+
+	
+	/**
+	 * 查询用户创建的角色ID列表
+	 */
+	List<Long> queryRoleIdList(Long createUserId);
+
+	List<SysRoleEntity> getRolesList();
 }
-

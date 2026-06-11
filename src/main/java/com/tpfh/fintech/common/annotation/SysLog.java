@@ -1,6 +1,3 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.common.annotation;
 
 import java.lang.annotation.Documented;
@@ -9,10 +6,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(value={ElementType.METHOD})
-@Retention(value=RetentionPolicy.RUNTIME)
+/**
+ * 系统日志注解
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface SysLog {
-    public String value() default "";
-}
 
+	String value() default "";
+}

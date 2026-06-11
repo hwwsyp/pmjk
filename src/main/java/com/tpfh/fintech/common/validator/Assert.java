@@ -1,17 +1,19 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.commons.lang.StringUtils
- */
 package com.tpfh.fintech.common.validator;
 
-import com.tpfh.fintech.common.exception.TpfhException;
 import org.apache.commons.lang.StringUtils;
 
+import com.tpfh.fintech.common.exception.TpfhException;
+
+/**
+ * 数据校验
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-03-23 15:50
+ */
 public abstract class Assert {
+
     public static void isBlank(String str, String message) {
-        if (StringUtils.isBlank((String)str)) {
+        if (StringUtils.isBlank(str)) {
             throw new TpfhException(message);
         }
     }
@@ -22,4 +24,3 @@ public abstract class Assert {
         }
     }
 }
-

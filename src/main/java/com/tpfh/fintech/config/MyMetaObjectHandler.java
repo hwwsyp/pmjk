@@ -1,35 +1,40 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.mapper.MetaObjectHandler
- *  org.apache.ibatis.reflection.MetaObject
- */
 package com.tpfh.fintech.config;
+
+import java.util.Date;
+
+import org.apache.ibatis.reflection.MetaObject;
 
 import com.baomidou.mybatisplus.mapper.MetaObjectHandler;
 import com.tpfh.fintech.common.utils.ShiroUtils;
-import java.util.Date;
-import org.apache.ibatis.reflection.MetaObject;
 
-public class MyMetaObjectHandler
-extends MetaObjectHandler {
+/**
+ * 自动填充 修改创建时间与人
+ * @author tpfh
+ *
+ */
+public class MyMetaObjectHandler extends MetaObjectHandler {
+
+	
+	@Override
     public void insertFill(MetaObject metaObject) {
         Date newDate = new Date();
-        Object createTime = this.getFieldValByName("createTime", metaObject);
-        Object createUser = this.getFieldValByName("createUser", metaObject);
+        // 测试下划线
+        Object createTime = getFieldValByName("createTime", metaObject);//mybatis-plus版本2.0.9+
+        Object createUser = getFieldValByName("createUser", metaObject);
         if (createTime == null) {
-            this.setFieldValByName("createTime", newDate, metaObject);
+            setFieldValByName("createTime", newDate, metaObject);//mybatis-plus版本2.0.9+
         }
         if (createUser == null) {
-            this.setFieldValByName("createUser", ShiroUtils.getUserId(), metaObject);
+            setFieldValByName("createUser", ShiroUtils.getUserId(), metaObject);//mybatis-plus版本2.0.9+
         }
     }
 
+    @Override
     public void updateFill(MetaObject metaObject) {
+
+        //mybatis-plus版本2.0.9+
         Date newDate = new Date();
-        this.setFieldValByName("updateTime", newDate, metaObject);
-        this.setFieldValByName("updateUser", ShiroUtils.getUserId(), metaObject);
+        setFieldValByName("updateTime", newDate, metaObject);
+        setFieldValByName("updateUser", ShiroUtils.getUserId(), metaObject);
     }
 }
-

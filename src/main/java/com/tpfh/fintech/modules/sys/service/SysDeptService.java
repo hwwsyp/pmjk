@@ -1,31 +1,45 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.service.IService
- */
 package com.tpfh.fintech.modules.sys.service;
+
+import java.util.HashMap;
+import java.util.List;
 
 import com.baomidou.mybatisplus.service.IService;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.sys.entity.SysDeptEntity;
-import java.util.HashMap;
-import java.util.List;
 
-public interface SysDeptService
-extends IService<SysDeptEntity> {
-    public List<String> queryDetpIdList(Integer var1);
+/**
+ * 部门管理
+ * 
 
-    public List<SysDeptEntity> getSubDeptList(Integer var1);
 
-    public List<SysDeptEntity> queryList(SysDeptEntity var1);
+ * @date 2017-06-20 15:23:47
+ */
+public interface SysDeptService extends IService<SysDeptEntity>{
 
-    public SysDeptEntity queryObject(String var1);
+	/**
+	 * 查询子部门ID列表
+	 * @param parentId  上级部门ID
+	 */
+	List<String> queryDetpIdList(Integer parentId);
 
-    public PageUtils queryPage(HashMap<String, Object> var1);
+	/**
+	 * 获取子部门
+	 */
+	List<SysDeptEntity> getSubDeptList(Integer deptId);
+	
+	/**
+	 * 部门列表
+	 * @param sysDeptEntity
+	 * @return
+	 */
+	List<SysDeptEntity> queryList(SysDeptEntity sysDeptEntity);
 
-    public List<SysDeptEntity> getDeptsList();
+	SysDeptEntity queryObject(String deptId);
 
-    public List<SysDeptEntity> queryList(Long var1);
+	PageUtils queryPage(HashMap<String, Object> params);
+
+	List<SysDeptEntity> getDeptsList();
+
+	List<SysDeptEntity> queryList(Long userId);
+
 }
-

@@ -1,22 +1,23 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.google.code.kaptcha.impl.DefaultKaptcha
- *  com.google.code.kaptcha.util.Config
- *  org.springframework.context.annotation.Bean
- *  org.springframework.context.annotation.Configuration
- */
 package com.tpfh.fintech.config;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.code.kaptcha.util.Config;
-import java.util.Properties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Properties;
+
+
+/**
+ * 生成验证码配置
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-04-20 19:22
+ */
 @Configuration
 public class KaptchaConfig {
+
     @Bean
     public DefaultKaptcha producer() {
         Properties properties = new Properties();
@@ -29,4 +30,3 @@ public class KaptchaConfig {
         return defaultKaptcha;
     }
 }
-

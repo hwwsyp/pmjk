@@ -1,17 +1,3 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.mapper.EntityWrapper
- *  com.baomidou.mybatisplus.plugins.Page
- *  com.baomidou.mybatisplus.service.impl.ServiceImpl
- *  org.apache.commons.lang.StringUtils
- *  org.quartz.CronTrigger
- *  org.quartz.Scheduler
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.stereotype.Service
- *  org.springframework.transaction.annotation.Transactional
- */
 package com.tpfh.fintech.modules.job.service.impl;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
@@ -24,12 +10,7 @@ import com.tpfh.fintech.modules.job.dao.ScheduleJobDao;
 import com.tpfh.fintech.modules.job.entity.ScheduleJobEntity;
 import com.tpfh.fintech.modules.job.service.ScheduleJobService;
 import com.tpfh.fintech.modules.job.utils.ScheduleUtils;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang.StringUtils;
 import org.quartz.CronTrigger;
 import org.quartz.Scheduler;
@@ -37,110 +18,107 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service(value="scheduleJobService")
-public class ScheduleJobServiceImpl
-extends ServiceImpl<ScheduleJobDao, ScheduleJobEntity>
-implements ScheduleJobService {
-    @Autowired
+import javax.annotation.PostConstruct;
+import java.util.*;
+
+@Service("scheduleJobService")
+public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobDao, ScheduleJobEntity> implements ScheduleJobService {
+	@Autowired
     private Scheduler scheduler;
-
-    @PostConstruct
-    public void init() {
-        List scheduleJobList = this.selectList(null);
-        for (ScheduleJobEntity scheduleJob : scheduleJobList) {
-            CronTrigger cronTrigger = ScheduleUtils.getCronTrigger(this.scheduler, scheduleJob.getJobId());
-            if (cronTrigger == null) {
-                ScheduleUtils.createScheduleJob(this.scheduler, scheduleJob);
-                continue;
+	
+	/**
+	 * 项目启动时，初始化定时器
+	 */
+	@PostConstruct
+	public void init(){
+		List<ScheduleJobEntity> scheduleJobList = this.selectList(null);
+		for(ScheduleJobEntity scheduleJob : scheduleJobList){
+			CronTrigger cronTrigger = ScheduleUtils.getCronTrigger(scheduler, scheduleJob.getJobId());
+            //如果不存在，则创建
+            if(cronTrigger == null) {
+                ScheduleUtils.createScheduleJob(scheduler, scheduleJob);
+            }else {
+                ScheduleUtils.updateScheduleJob(scheduler, scheduleJob);
             }
-            ScheduleUtils.updateScheduleJob(this.scheduler, scheduleJob);
-        }
-    }
+		}
+	}
 
-    @Override
-    public PageUtils queryPage(Map<String, Object> params) {
-        String beanName = (String)params.get("beanName");
-        Page page = this.selectPage(new Query(params).getPage(), new EntityWrapper().like(StringUtils.isNotBlank((String)beanName), "bean_name", beanName));
-        return new PageUtils(page);
-    }
+	@Override
+	public PageUtils queryPage(Map<String, Object> params) {
+		String beanName = (String)params.get("beanName");
 
-    @Override
-    @Transactional(rollbackFor={Exception.class})
-    public void save(ScheduleJobEntity scheduleJob) {
-        scheduleJob.setCreateTime(new Date());
-        scheduleJob.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
+		Page<ScheduleJobEntity> page = this.selectPage(
+				new Query<ScheduleJobEntity>(params).getPage(),
+				new EntityWrapper<ScheduleJobEntity>().like(StringUtils.isNotBlank(beanName),"bean_name", beanName)
+		);
+
+		return new PageUtils(page);
+	}
+
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void save(ScheduleJobEntity scheduleJob) {
+		scheduleJob.setCreateTime(new Date());
+		scheduleJob.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.insert(scheduleJob);
-        ScheduleUtils.createScheduleJob(this.scheduler, scheduleJob);
+        
+        ScheduleUtils.createScheduleJob(scheduler, scheduleJob);
     }
-
-    @Override
-    @Transactional(rollbackFor={Exception.class})
-    public void update(ScheduleJobEntity scheduleJob) {
-        ScheduleUtils.updateScheduleJob(this.scheduler, scheduleJob);
+	
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void update(ScheduleJobEntity scheduleJob) {
+        ScheduleUtils.updateScheduleJob(scheduler, scheduleJob);
+                
         this.updateById(scheduleJob);
     }
 
-    @Override
-    @Transactional(rollbackFor={Exception.class})
+	@Override
+	@Transactional(rollbackFor = Exception.class)
     public void deleteBatch(Long[] jobIds) {
-        Long[] longArray = jobIds;
-        int n = jobIds.length;
-        int n2 = 0;
-        while (n2 < n) {
-            Long jobId = longArray[n2];
-            ScheduleUtils.deleteScheduleJob(this.scheduler, jobId);
-            ++n2;
-        }
-        this.deleteBatchIds(Arrays.asList(jobIds));
-    }
+    	for(Long jobId : jobIds){
+    		ScheduleUtils.deleteScheduleJob(scheduler, jobId);
+    	}
+    	
+    	//删除数据
+    	this.deleteBatchIds(Arrays.asList(jobIds));
+	}
 
-    @Override
-    public int updateBatch(Long[] jobIds, int status) {
-        HashMap<String, Object> map = new HashMap<String, Object>();
-        map.put("list", jobIds);
-        map.put("status", status);
-        return ((ScheduleJobDao)this.baseMapper).updateBatch(map);
+	@Override
+    public int updateBatch(Long[] jobIds, int status){
+    	Map<String, Object> map = new HashMap<>();
+    	map.put("list", jobIds);
+    	map.put("status", status);
+    	return baseMapper.updateBatch(map);
     }
-
-    @Override
-    @Transactional(rollbackFor={Exception.class})
+    
+	@Override
+	@Transactional(rollbackFor = Exception.class)
     public void run(Long[] jobIds) {
-        Long[] longArray = jobIds;
-        int n = jobIds.length;
-        int n2 = 0;
-        while (n2 < n) {
-            Long jobId = longArray[n2];
-            ScheduleUtils.run(this.scheduler, (ScheduleJobEntity)this.selectById(jobId));
-            ++n2;
-        }
+    	for(Long jobId : jobIds){
+    		ScheduleUtils.run(scheduler, this.selectById(jobId));
+    	}
     }
 
-    @Override
-    @Transactional(rollbackFor={Exception.class})
+	@Override
+	@Transactional(rollbackFor = Exception.class)
     public void pause(Long[] jobIds) {
-        Long[] longArray = jobIds;
-        int n = jobIds.length;
-        int n2 = 0;
-        while (n2 < n) {
-            Long jobId = longArray[n2];
-            ScheduleUtils.pauseJob(this.scheduler, jobId);
-            ++n2;
-        }
-        this.updateBatch(jobIds, Constant.ScheduleStatus.PAUSE.getValue());
+        for(Long jobId : jobIds){
+    		ScheduleUtils.pauseJob(scheduler, jobId);
+    	}
+        
+    	updateBatch(jobIds, Constant.ScheduleStatus.PAUSE.getValue());
     }
 
-    @Override
-    @Transactional(rollbackFor={Exception.class})
+	@Override
+	@Transactional(rollbackFor = Exception.class)
     public void resume(Long[] jobIds) {
-        Long[] longArray = jobIds;
-        int n = jobIds.length;
-        int n2 = 0;
-        while (n2 < n) {
-            Long jobId = longArray[n2];
-            ScheduleUtils.resumeJob(this.scheduler, jobId);
-            ++n2;
-        }
-        this.updateBatch(jobIds, Constant.ScheduleStatus.NORMAL.getValue());
-    }
-}
+    	for(Long jobId : jobIds){
+    		ScheduleUtils.resumeJob(scheduler, jobId);
+    	}
 
+    	updateBatch(jobIds, Constant.ScheduleStatus.NORMAL.getValue());
+    }
+    
+}

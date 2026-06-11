@@ -1,25 +1,42 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.service.IService
- */
 package com.tpfh.fintech.modules.sys.service;
+
 
 import com.baomidou.mybatisplus.service.IService;
 import com.tpfh.fintech.modules.sys.entity.SysMenuEntity;
+
 import java.util.List;
 
-public interface SysMenuService
-extends IService<SysMenuEntity> {
-    public List<SysMenuEntity> queryListParentId(Long var1, List<Long> var2);
 
-    public List<SysMenuEntity> queryListParentId(Long var1);
+/**
+ * 菜单管理
+ */
+public interface SysMenuService extends IService<SysMenuEntity> {
 
-    public List<SysMenuEntity> queryNotButtonList();
+	/**
+	 * 根据父菜单，查询子菜单
+	 * @param parentId 父菜单ID
+	 * @param menuIdList  用户菜单ID
+	 */
+	List<SysMenuEntity> queryListParentId(Long parentId, List<Long> menuIdList);
 
-    public List<SysMenuEntity> getUserMenuList(Long var1);
+	/**
+	 * 根据父菜单，查询子菜单
+	 * @param parentId 父菜单ID
+	 */
+	List<SysMenuEntity> queryListParentId(Long parentId);
+	
+	/**
+	 * 获取不包含按钮的菜单列表
+	 */
+	List<SysMenuEntity> queryNotButtonList();
+	
+	/**
+	 * 获取用户菜单列表
+	 */
+	List<SysMenuEntity> getUserMenuList(Long userId);
 
-    public void delete(Long var1);
+	/**
+	 * 删除
+	 */
+	void delete(Long menuId);
 }
-

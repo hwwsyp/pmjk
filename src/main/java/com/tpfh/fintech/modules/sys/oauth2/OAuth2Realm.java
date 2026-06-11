@@ -1,35 +1,6 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.shiro.authc.AuthenticationException
- *  org.apache.shiro.authc.AuthenticationInfo
- *  org.apache.shiro.authc.AuthenticationToken
- *  org.apache.shiro.authc.IncorrectCredentialsException
- *  org.apache.shiro.authc.LockedAccountException
- *  org.apache.shiro.authc.SimpleAuthenticationInfo
- *  org.apache.shiro.authz.AuthorizationInfo
- *  org.apache.shiro.authz.SimpleAuthorizationInfo
- *  org.apache.shiro.realm.AuthorizingRealm
- *  org.apache.shiro.subject.PrincipalCollection
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.stereotype.Component
- */
 package com.tpfh.fintech.modules.sys.oauth2;
 
-import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
-import com.tpfh.fintech.modules.sys.entity.SysUserTokenEntity;
-import com.tpfh.fintech.modules.sys.oauth2.OAuth2Token;
-import com.tpfh.fintech.modules.sys.service.ShiroService;
-import com.tpfh.fintech.modules.sys.service.SysUserRoleService;
-import java.util.List;
-import java.util.Set;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.IncorrectCredentialsException;
-import org.apache.shiro.authc.LockedAccountException;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -37,41 +8,74 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
+import com.tpfh.fintech.modules.sys.entity.SysUserTokenEntity;
+import com.tpfh.fintech.modules.sys.service.ShiroService;
+import com.tpfh.fintech.modules.sys.service.SysUserRoleService;
+
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 认证
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-05-20 14:00
+ */
 @Component
-public class OAuth2Realm
-extends AuthorizingRealm {
+public class OAuth2Realm extends AuthorizingRealm {
     @Autowired
     private ShiroService shiroService;
     @Autowired
     private SysUserRoleService sysUserRoleService;
 
+    @Override
     public boolean supports(AuthenticationToken token) {
         return token instanceof OAuth2Token;
     }
 
+    /**
+     * 授权(验证权限时调用)
+     */
+    @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         SysUserEntity user = (SysUserEntity)principals.getPrimaryPrincipal();
         Long userId = user.getUserId();
-        Set<String> permsSet = this.shiroService.getUserPermissions(userId);
+
+        //用户权限列表
+        Set<String> permsSet = shiroService.getUserPermissions(userId);
+
         SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
         info.setStringPermissions(permsSet);
         return info;
     }
 
+    /**
+     * 认证(登录时调用)
+     */
+    @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        String accessToken = (String)token.getPrincipal();
-        SysUserTokenEntity tokenEntity = this.shiroService.queryByToken(accessToken);
-        if (tokenEntity == null || tokenEntity.getExpireTime().getTime() < System.currentTimeMillis()) {
-            throw new IncorrectCredentialsException("token\u5931\u6548\uff0c\u8bf7\u91cd\u65b0\u767b\u5f55");
+        String accessToken = (String) token.getPrincipal();
+
+        //根据accessToken，查询用户信息
+        SysUserTokenEntity tokenEntity = shiroService.queryByToken(accessToken);
+        //token失效
+        if(tokenEntity == null || tokenEntity.getExpireTime().getTime() < System.currentTimeMillis()){
+            throw new IncorrectCredentialsException("token失效，请重新登录");
         }
-        SysUserEntity user = this.shiroService.queryUser(tokenEntity.getUserId());
-        if (user.getStatus() == 0) {
-            throw new LockedAccountException("\u8d26\u53f7\u5df2\u88ab\u9501\u5b9a,\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458");
+
+        //查询用户信息
+        SysUserEntity user = shiroService.queryUser(tokenEntity.getUserId());
+        //账号锁定
+        if(user.getStatus() == 0){
+            throw new LockedAccountException("账号已被锁定,请联系管理员");
         }
-        List<Long> roleIdList = this.sysUserRoleService.queryRoleIdList(user.getUserId());
+
+        List<Long> roleIdList = sysUserRoleService.queryRoleIdList(user.getUserId());
         user.setRoleIdList(roleIdList);
-        SimpleAuthenticationInfo info = new SimpleAuthenticationInfo((Object)user, (Object)accessToken, this.getName());
+        
+        SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(user, accessToken, getName());
         return info;
     }
 }
-

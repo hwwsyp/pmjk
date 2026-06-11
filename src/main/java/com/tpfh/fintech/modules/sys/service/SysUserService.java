@@ -1,43 +1,71 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.service.IService
- */
 package com.tpfh.fintech.modules.sys.service;
+
+import java.util.HashMap;
+import java.util.List;
 
 import com.baomidou.mybatisplus.service.IService;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
-import java.util.HashMap;
-import java.util.List;
 
-public interface SysUserService
-extends IService<SysUserEntity> {
-    public PageUtils queryPage(HashMap<String, Object> var1);
 
-    public List<String> queryAllPerms(Long var1);
+/**
+ * 系统用户
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年9月18日 上午9:43:39
+ */
+public interface SysUserService extends IService<SysUserEntity> {
 
-    public List<Long> queryAllMenuId(Long var1);
+	PageUtils queryPage(HashMap<String,Object> params);
 
-    public SysUserEntity queryByUserName(String var1);
+	/**
+	 * 查询用户的所有权限
+	 * @param userId  用户ID
+	 */
+	List<String> queryAllPerms(Long userId);
+	
+	/**
+	 * 查询用户的所有菜单ID
+	 */
+	List<Long> queryAllMenuId(Long userId);
 
-    public void save(SysUserEntity var1);
+	/**
+	 * 根据用户名，查询系统用户
+	 */
+	SysUserEntity queryByUserName(String username);
 
-    public void update(SysUserEntity var1);
+	/**
+	 * 保存用户
+	 */
+	void save(SysUserEntity user);
+	
+	/**
+	 * 修改用户
+	 */
+	void update(SysUserEntity user);
+	
+	/**
+	 * 删除用户
+	 */
+	void deleteBatch(Long[] userIds);
 
-    public void deleteBatch(Long[] var1);
+	/**
+	 * 修改密码
+	 * @param userId       用户ID
+	 * @param password     原密码
+	 * @param newPassword  新密码
+	 */
+	boolean updatePassword(Long userId, String password, String newPassword);
 
-    public boolean updatePassword(Long var1, String var2, String var3);
+	List<SysUserEntity> getUsersList(String word);
 
-    public List<SysUserEntity> getUsersList(String var1);
+	List<SysUserEntity> getUsersListByDeptId(Integer deptId);
 
-    public List<SysUserEntity> getUsersListByDeptId(Integer var1);
+	List<SysUserEntity> getUsersListByRoleId(String roleId);
 
-    public List<SysUserEntity> getUsersListByRoleId(String var1);
+	List<SysUserEntity> getAllUsersList();
 
-    public List<SysUserEntity> getAllUsersList();
-
-    public SysUserEntity getUserInfo(Long var1);
+	SysUserEntity getUserInfo(Long userId);
+	
 }
-

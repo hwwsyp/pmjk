@@ -1,32 +1,33 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.modules.sys.oauth2;
 
-import com.tpfh.fintech.common.exception.TpfhException;
 import java.security.MessageDigest;
 import java.util.UUID;
 
+import com.tpfh.fintech.common.exception.TpfhException;
+
+/**
+ * 生成token
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-05-20 14:41
+ */
 public class TokenGenerator {
-    private static final char[] hexCode = "0123456789abcdef".toCharArray();
 
     public static String generateValue() {
-        return TokenGenerator.generateValue(UUID.randomUUID().toString());
+        return generateValue(UUID.randomUUID().toString());
     }
 
+    private static final char[] hexCode = "0123456789abcdef".toCharArray();
+
     public static String toHexString(byte[] data) {
-        if (data == null) {
+        if(data == null) {
             return null;
         }
-        StringBuilder r = new StringBuilder(data.length * 2);
-        byte[] byArray = data;
-        int n = data.length;
-        int n2 = 0;
-        while (n2 < n) {
-            byte b = byArray[n2];
-            r.append(hexCode[b >> 4 & 0xF]);
-            r.append(hexCode[b & 0xF]);
-            ++n2;
+        StringBuilder r = new StringBuilder(data.length*2);
+        for ( byte b : data) {
+            r.append(hexCode[(b >> 4) & 0xF]);
+            r.append(hexCode[(b & 0xF)]);
         }
         return r.toString();
     }
@@ -37,11 +38,9 @@ public class TokenGenerator {
             algorithm.reset();
             algorithm.update(param.getBytes());
             byte[] messageDigest = algorithm.digest();
-            return TokenGenerator.toHexString(messageDigest);
-        }
-        catch (Exception e) {
-            throw new TpfhException("\u751f\u6210Token\u5931\u8d25", e);
+            return toHexString(messageDigest);
+        } catch (Exception e) {
+            throw new TpfhException("生成Token失败", e);
         }
     }
 }
-

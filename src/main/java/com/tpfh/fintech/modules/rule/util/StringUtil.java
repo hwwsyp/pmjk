@@ -1,6 +1,3 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.modules.rule.util;
 
 import java.text.SimpleDateFormat;
@@ -8,37 +5,86 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 描述：字符串工具
+ * CLASSPATH: util.StringUtil
+ * VERSION:   1.0
+ * Created by tpfh
+ * DATE:      2016/12/29
+ */
 public class StringUtil {
+
+    /**
+     * @param list 要进行判断的数据集合
+     * @return 不为空返回true，为空返回false
+     * 方法说明：判断list集合是否为空
+     * date:2016-12-29
+     * author:tpfh
+     */
     public static boolean listIsNotNull(List list) {
-        return list != null && list.size() > 0;
+        return ((null != list) && (list.size() > 0));
     }
 
+    /**
+     * @param src 要进行判断的字符串
+     * @return 为空返回true，不为空为false
+     * 方法说明：判断字符串是否为空
+     * date:2016-12-29
+     * author:tpfh
+     */
     public static boolean strIsNull(String src) {
-        return src == null || "null".equals(src) || src.trim().length() <= 0 || "".equals(src);
+        return (null == src) || "null".equals(src) || (src.trim().length() <= 0) || "".equals(src);
     }
 
+    /**
+     * Date 2017/1/4
+     * Author tpfh [tpfh@tpfh.com]
+     * <p>
+     * 方法说明: 判断字符串是否不为空
+     *
+     * @param src 要进行判断的字符串
+     * @return 为空返回false，不为空为true
+     */
     public static boolean strIsNotNull(String src) {
-        return !StringUtil.strIsNull(src);
+
+        return !strIsNull(src);
     }
 
+    /**
+     * Date 2017/1/3
+     * Author tpfh [tpfh@tpfh.com]
+     * <p>
+     * 方法说明: 将字符串转换为指定类型的list集合
+     *
+     * @param str   要转换的字符串
+     * @param clazz 对象类型
+     * @param <X>   泛型
+     * @return 返回转换后的list集合
+     */
+    @SuppressWarnings("unchecked")
     public static <X> List<X> parseStrToList(String str, Class<X> clazz) {
         String[] a = str.split(",");
-        ArrayList<Long> b = new ArrayList<Long>();
-        String[] stringArray = a;
-        int n = a.length;
-        int n2 = 0;
-        while (n2 < n) {
-            String anA = stringArray[n2];
+        List<X> b = new ArrayList<>();
+        for (String anA : a) {
             Long c = Long.parseLong(anA);
-            b.add(c);
-            ++n2;
+            b.add((X) c);
         }
         return b;
     }
 
+
+    /**
+     * Date 2017/3/25
+     * Author tpfh [tpfh@tpfh.com]
+     * <p>
+     * 方法说明: 根据日期获取当前年份
+     *
+     * @param date 日期
+     */
     public static String getCurrentYear(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
         return sdf.format(date);
     }
-}
 
+
+}

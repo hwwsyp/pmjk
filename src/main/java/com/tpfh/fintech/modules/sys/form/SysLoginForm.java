@@ -1,8 +1,8 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.modules.sys.form;
 
+/**
+ * 登录表单
+ */
 public class SysLoginForm {
     private String username;
     private String password;
@@ -10,7 +10,7 @@ public class SysLoginForm {
     private String uuid;
 
     public String getUsername() {
-        return this.username;
+        return username;
     }
 
     public void setUsername(String username) {
@@ -18,7 +18,7 @@ public class SysLoginForm {
     }
 
     public String getPassword() {
-        return this.password;
+        return password;
     }
 
     public void setPassword(String password) {
@@ -26,7 +26,7 @@ public class SysLoginForm {
     }
 
     public String getCaptcha() {
-        return this.captcha;
+        return captcha;
     }
 
     public void setCaptcha(String captcha) {
@@ -34,11 +34,10 @@ public class SysLoginForm {
     }
 
     public String getUuid() {
-        return this.uuid;
+        return uuid;
     }
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
 }
-

@@ -1,30 +1,9 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.shiro.authz.annotation.RequiresPermissions
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.web.bind.annotation.GetMapping
- *  org.springframework.web.bind.annotation.PathVariable
- *  org.springframework.web.bind.annotation.PostMapping
- *  org.springframework.web.bind.annotation.RequestBody
- *  org.springframework.web.bind.annotation.RequestMapping
- *  org.springframework.web.bind.annotation.RequestParam
- *  org.springframework.web.bind.annotation.RestController
- */
 package com.tpfh.fintech.modules.sys.controller;
 
-import com.tpfh.fintech.common.annotation.SysLog;
-import com.tpfh.fintech.common.utils.PageUtils;
-import com.tpfh.fintech.common.utils.R;
-import com.tpfh.fintech.common.validator.ValidatorUtils;
-import com.tpfh.fintech.modules.sys.controller.AbstractController;
-import com.tpfh.fintech.modules.sys.entity.SysRoleEntity;
-import com.tpfh.fintech.modules.sys.service.SysRoleMenuService;
-import com.tpfh.fintech.modules.sys.service.SysRoleService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,71 +14,123 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tpfh.fintech.common.annotation.SysLog;
+import com.tpfh.fintech.common.utils.Constant;
+import com.tpfh.fintech.common.utils.PageUtils;
+import com.tpfh.fintech.common.utils.R;
+import com.tpfh.fintech.common.validator.ValidatorUtils;
+import com.tpfh.fintech.modules.sys.entity.SysRoleEntity;
+import com.tpfh.fintech.modules.sys.service.SysRoleMenuService;
+import com.tpfh.fintech.modules.sys.service.SysRoleService;
+
+/**
+ * 角色管理
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年11月8日 下午2:18:33
+ */
 @RestController
-@RequestMapping(value={"/sys/role"})
-public class SysRoleController
-extends AbstractController {
-    @Autowired
-    private SysRoleService sysRoleService;
-    @Autowired
-    private SysRoleMenuService sysRoleMenuService;
+@RequestMapping("/sys/role")
+public class SysRoleController extends AbstractController {
+	@Autowired
+	private SysRoleService sysRoleService;
+	@Autowired
+	private SysRoleMenuService sysRoleMenuService;
 
-    @GetMapping(value={"/list"})
-    @RequiresPermissions(value={"sys:role:list"})
-    public R list(@RequestParam Map<String, Object> params) {
-        PageUtils page = this.sysRoleService.queryPage(params);
-        return R.ok().put("page", (Object)page);
-    }
+	/**
+	 * 角色列表
+	 */
+	@GetMapping("/list")
+	@RequiresPermissions("sys:role:list")
+	public R list(@RequestParam Map<String, Object> params){
+//		//如果不是超级管理员，则只查询自己创建的角色列表
+//		if(getUserId() != Constant.SUPER_ADMIN){
+//			params.put("createUserId", getUserId());
+//		}
 
-    @GetMapping(value={"/select"})
-    @RequiresPermissions(value={"sys:role:select"})
-    public R select() {
-        HashMap map = new HashMap();
-        List list = this.sysRoleService.selectByMap(map);
-        return R.ok().put("list", (Object)list);
-    }
+		PageUtils page = sysRoleService.queryPage(params);
 
-    @GetMapping(value={"/info/{roleId}"})
-    @RequiresPermissions(value={"sys:role:info"})
-    public R info(@PathVariable(value="roleId") Long roleId) {
-        SysRoleEntity role = (SysRoleEntity)this.sysRoleService.selectById(roleId);
-        List<Long> menuIdList = this.sysRoleMenuService.queryMenuIdList(roleId);
-        role.setMenuIdList(menuIdList);
-        return R.ok().put("role", (Object)role);
-    }
-
-    @SysLog(value="\u4fdd\u5b58\u89d2\u8272")
-    @PostMapping(value={"/save"})
-    @RequiresPermissions(value={"sys:role:save"})
-    public R save(@RequestBody SysRoleEntity role) {
-        ValidatorUtils.validateEntity(role, new Class[0]);
-        role.setCreateUserId(this.getUserId());
-        this.sysRoleService.save(role);
-        return R.ok();
-    }
-
-    @SysLog(value="\u4fee\u6539\u89d2\u8272")
-    @PostMapping(value={"/update"})
-    @RequiresPermissions(value={"sys:role:update"})
-    public R update(@RequestBody SysRoleEntity role) {
-        ValidatorUtils.validateEntity(role, new Class[0]);
-        role.setCreateUserId(this.getUserId());
-        this.sysRoleService.update(role);
-        return R.ok();
-    }
-
-    @SysLog(value="\u5220\u9664\u89d2\u8272")
-    @PostMapping(value={"/delete"})
-    @RequiresPermissions(value={"sys:role:delete"})
-    public R delete(@RequestBody Long[] roleIds) {
-        this.sysRoleService.deleteBatch(roleIds);
-        return R.ok();
-    }
-
-    @RequestMapping(value={"/getRolesList"})
-    public R getRolesList() {
-        List<SysRoleEntity> rolesList = this.sysRoleService.getRolesList();
-        return R.ok().put("rolesList", (Object)rolesList);
-    }
+		return R.ok().put("page", page);
+	}
+	
+	/**
+	 * 角色列表
+	 */
+	@GetMapping("/select")
+	@RequiresPermissions("sys:role:select")
+	public R select(){
+		Map<String, Object> map = new HashMap<>();
+		
+//		//如果不是超级管理员，则只查询自己所拥有的角色列表
+//		if(getUserId() != Constant.SUPER_ADMIN){
+//			map.put("createUserId", getUserId());
+//		}
+		List<SysRoleEntity> list = sysRoleService.selectByMap(map);
+		
+		return R.ok().put("list", list);
+	}
+	
+	/**
+	 * 角色信息
+	 */
+	@GetMapping("/info/{roleId}")
+	@RequiresPermissions("sys:role:info")
+	public R info(@PathVariable("roleId") Long roleId){
+		SysRoleEntity role = sysRoleService.selectById(roleId);
+		
+		//查询角色对应的菜单
+		List<Long> menuIdList = sysRoleMenuService.queryMenuIdList(roleId);
+		role.setMenuIdList(menuIdList);
+		
+		return R.ok().put("role", role);
+	}
+	
+	/**
+	 * 保存角色
+	 */
+	@SysLog("保存角色")
+	@PostMapping("/save")
+	@RequiresPermissions("sys:role:save")
+	public R save(@RequestBody SysRoleEntity role){
+		ValidatorUtils.validateEntity(role);
+		
+		role.setCreateUserId(getUserId());
+		sysRoleService.save(role);
+		
+		return R.ok();
+	}
+	
+	/**
+	 * 修改角色
+	 */
+	@SysLog("修改角色")
+	@PostMapping("/update")
+	@RequiresPermissions("sys:role:update")
+	public R update(@RequestBody SysRoleEntity role){
+		ValidatorUtils.validateEntity(role);
+		
+		role.setCreateUserId(getUserId());
+		sysRoleService.update(role);
+		
+		return R.ok();
+	}
+	
+	/**
+	 * 删除角色
+	 */
+	@SysLog("删除角色")
+	@PostMapping("/delete")
+	@RequiresPermissions("sys:role:delete")
+	public R delete(@RequestBody Long[] roleIds){
+		sysRoleService.deleteBatch(roleIds);
+		
+		return R.ok();
+	}
+	
+	@RequestMapping("/getRolesList")
+	public R getRolesList(){
+		List<SysRoleEntity> rolesList=sysRoleService.getRolesList();
+		return R.ok().put("rolesList", rolesList);
+	}
 }
-

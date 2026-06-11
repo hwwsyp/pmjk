@@ -1,78 +1,90 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.plugins.Page
- */
 package com.tpfh.fintech.common.utils;
 
 import com.baomidou.mybatisplus.plugins.Page;
+
 import java.io.Serializable;
 import java.util.List;
 
-public class PageUtils
-implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private int totalCount;
-    private int pageSize;
-    private int totalPage;
-    private int currPage;
-    private List<?> list;
+/**
+ * 分页工具类
+ */
+public class PageUtils implements Serializable {
+	private static final long serialVersionUID = 1L;
+	//总记录数
+	private int totalCount;
+	//每页记录数
+	private int pageSize;
+	//总页数
+	private int totalPage;
+	//当前页数
+	private int currPage;
+	//列表数据
+	private List<?> list;
+	
+	/**
+	 * 分页
+	 * @param list        列表数据
+	 * @param totalCount  总记录数
+	 * @param pageSize    每页记录数
+	 * @param currPage    当前页数
+	 */
+	public PageUtils(List<?> list, int totalCount, int pageSize, int currPage) {
+		this.list = list;
+		this.totalCount = totalCount;
+		this.pageSize = pageSize;
+		this.currPage = currPage;
+		this.totalPage = (int)Math.ceil((double)totalCount/pageSize);
+	}
 
-    public PageUtils(List<?> list, int totalCount, int pageSize, int currPage) {
-        this.list = list;
-        this.totalCount = totalCount;
-        this.pageSize = pageSize;
-        this.currPage = currPage;
-        this.totalPage = (int)Math.ceil((double)totalCount / (double)pageSize);
-    }
+	/**
+	 * 分页
+	 */
+	public PageUtils(Page<?> page) {
+		this.list = page.getRecords();
+		this.totalCount = page.getTotal();
+		this.pageSize = page.getSize();
+		this.currPage = page.getCurrent();
+		this.totalPage = page.getPages();
+	}
 
-    public PageUtils(Page<?> page) {
-        this.list = page.getRecords();
-        this.totalCount = page.getTotal();
-        this.pageSize = page.getSize();
-        this.currPage = page.getCurrent();
-        this.totalPage = page.getPages();
-    }
+	public int getTotalCount() {
+		return totalCount;
+	}
 
-    public int getTotalCount() {
-        return this.totalCount;
-    }
+	public void setTotalCount(int totalCount) {
+		this.totalCount = totalCount;
+	}
 
-    public void setTotalCount(int totalCount) {
-        this.totalCount = totalCount;
-    }
+	public int getPageSize() {
+		return pageSize;
+	}
 
-    public int getPageSize() {
-        return this.pageSize;
-    }
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
 
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
+	public int getTotalPage() {
+		return totalPage;
+	}
 
-    public int getTotalPage() {
-        return this.totalPage;
-    }
+	public void setTotalPage(int totalPage) {
+		this.totalPage = totalPage;
+	}
 
-    public void setTotalPage(int totalPage) {
-        this.totalPage = totalPage;
-    }
+	public int getCurrPage() {
+		return currPage;
+	}
 
-    public int getCurrPage() {
-        return this.currPage;
-    }
+	public void setCurrPage(int currPage) {
+		this.currPage = currPage;
+	}
 
-    public void setCurrPage(int currPage) {
-        this.currPage = currPage;
-    }
+	public List<?> getList() {
+		return list;
+	}
 
-    public List<?> getList() {
-        return this.list;
-    }
-
-    public void setList(List<?> list) {
-        this.list = list;
-    }
+	public void setList(List<?> list) {
+		this.list = list;
+	}
+	
 }
-

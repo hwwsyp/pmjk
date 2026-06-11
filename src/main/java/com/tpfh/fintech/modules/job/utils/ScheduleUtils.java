@@ -1,128 +1,150 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.quartz.CronScheduleBuilder
- *  org.quartz.CronTrigger
- *  org.quartz.JobBuilder
- *  org.quartz.JobDataMap
- *  org.quartz.JobDetail
- *  org.quartz.JobKey
- *  org.quartz.ScheduleBuilder
- *  org.quartz.Scheduler
- *  org.quartz.SchedulerException
- *  org.quartz.Trigger
- *  org.quartz.TriggerBuilder
- *  org.quartz.TriggerKey
- */
 package com.tpfh.fintech.modules.job.utils;
+
+import org.quartz.*;
 
 import com.tpfh.fintech.common.exception.TpfhException;
 import com.tpfh.fintech.common.utils.Constant;
 import com.tpfh.fintech.modules.job.entity.ScheduleJobEntity;
-import com.tpfh.fintech.modules.job.utils.ScheduleJob;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
-import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
-import org.quartz.ScheduleBuilder;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
 
+/**
+ * 定时任务工具类
+ *
+ * @author Mark tpfh@tpfh.com
+ * @since 1.2.0 2016-11-28
+ */
 public class ScheduleUtils {
-    private static final String JOB_NAME = "TASK_";
-
+    private final static String JOB_NAME = "TASK_";
+    
+    /**
+     * 获取触发器key
+     */
     public static TriggerKey getTriggerKey(Long jobId) {
-        return TriggerKey.triggerKey((String)(JOB_NAME + jobId));
+        return TriggerKey.triggerKey(JOB_NAME + jobId);
     }
-
+    
+    /**
+     * 获取jobKey
+     */
     public static JobKey getJobKey(Long jobId) {
-        return JobKey.jobKey((String)(JOB_NAME + jobId));
+        return JobKey.jobKey(JOB_NAME + jobId);
     }
 
+    /**
+     * 获取表达式触发器
+     */
     public static CronTrigger getCronTrigger(Scheduler scheduler, Long jobId) {
         try {
-            return (CronTrigger)scheduler.getTrigger(ScheduleUtils.getTriggerKey(jobId));
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u83b7\u53d6\u5b9a\u65f6\u4efb\u52a1CronTrigger\u51fa\u73b0\u5f02\u5e38", e);
+            return (CronTrigger) scheduler.getTrigger(getTriggerKey(jobId));
+        } catch (SchedulerException e) {
+            throw new TpfhException("获取定时任务CronTrigger出现异常", e);
         }
     }
 
+    /**
+     * 创建定时任务
+     */
     public static void createScheduleJob(Scheduler scheduler, ScheduleJobEntity scheduleJob) {
         try {
-            JobDetail jobDetail = JobBuilder.newJob(ScheduleJob.class).withIdentity(ScheduleUtils.getJobKey(scheduleJob.getJobId())).build();
-            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule((String)scheduleJob.getCronExpression()).withMisfireHandlingInstructionDoNothing();
-            CronTrigger trigger = (CronTrigger)TriggerBuilder.newTrigger().withIdentity(ScheduleUtils.getTriggerKey(scheduleJob.getJobId())).withSchedule((ScheduleBuilder)scheduleBuilder).build();
-            jobDetail.getJobDataMap().put("JOB_PARAM_KEY", (Object)scheduleJob);
-            scheduler.scheduleJob(jobDetail, (Trigger)trigger);
-            if (scheduleJob.getStatus().intValue() == Constant.ScheduleStatus.PAUSE.getValue()) {
-                ScheduleUtils.pauseJob(scheduler, scheduleJob.getJobId());
+        	//构建job信息
+            JobDetail jobDetail = JobBuilder.newJob(ScheduleJob.class).withIdentity(getJobKey(scheduleJob.getJobId())).build();
+
+            //表达式调度构建器
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(scheduleJob.getCronExpression())
+            		.withMisfireHandlingInstructionDoNothing();
+
+            //按新的cronExpression表达式构建一个新的trigger
+            CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(getTriggerKey(scheduleJob.getJobId())).withSchedule(scheduleBuilder).build();
+
+            //放入参数，运行时的方法可以获取
+            jobDetail.getJobDataMap().put(ScheduleJobEntity.JOB_PARAM_KEY, scheduleJob);
+
+            scheduler.scheduleJob(jobDetail, trigger);
+            
+            //暂停任务
+            if(scheduleJob.getStatus() == Constant.ScheduleStatus.PAUSE.getValue()){
+            	pauseJob(scheduler, scheduleJob.getJobId());
             }
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u521b\u5efa\u5b9a\u65f6\u4efb\u52a1\u5931\u8d25", e);
+        } catch (SchedulerException e) {
+            throw new TpfhException("创建定时任务失败", e);
         }
     }
-
+    
+    /**
+     * 更新定时任务
+     */
     public static void updateScheduleJob(Scheduler scheduler, ScheduleJobEntity scheduleJob) {
         try {
-            TriggerKey triggerKey = ScheduleUtils.getTriggerKey(scheduleJob.getJobId());
-            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule((String)scheduleJob.getCronExpression()).withMisfireHandlingInstructionDoNothing();
-            CronTrigger trigger = ScheduleUtils.getCronTrigger(scheduler, scheduleJob.getJobId());
-            trigger = (CronTrigger)trigger.getTriggerBuilder().withIdentity(triggerKey).withSchedule((ScheduleBuilder)scheduleBuilder).build();
-            trigger.getJobDataMap().put("JOB_PARAM_KEY", (Object)scheduleJob);
-            scheduler.rescheduleJob(triggerKey, (Trigger)trigger);
-            if (scheduleJob.getStatus().intValue() == Constant.ScheduleStatus.PAUSE.getValue()) {
-                ScheduleUtils.pauseJob(scheduler, scheduleJob.getJobId());
+            TriggerKey triggerKey = getTriggerKey(scheduleJob.getJobId());
+
+            //表达式调度构建器
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(scheduleJob.getCronExpression())
+            		.withMisfireHandlingInstructionDoNothing();
+
+            CronTrigger trigger = getCronTrigger(scheduler, scheduleJob.getJobId());
+            
+            //按新的cronExpression表达式重新构建trigger
+            trigger = trigger.getTriggerBuilder().withIdentity(triggerKey).withSchedule(scheduleBuilder).build();
+            
+            //参数
+            trigger.getJobDataMap().put(ScheduleJobEntity.JOB_PARAM_KEY, scheduleJob);
+            
+            scheduler.rescheduleJob(triggerKey, trigger);
+            
+            //暂停任务
+            if(scheduleJob.getStatus() == Constant.ScheduleStatus.PAUSE.getValue()){
+            	pauseJob(scheduler, scheduleJob.getJobId());
             }
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u66f4\u65b0\u5b9a\u65f6\u4efb\u52a1\u5931\u8d25", e);
+            
+        } catch (SchedulerException e) {
+            throw new TpfhException("更新定时任务失败", e);
         }
     }
 
+    /**
+     * 立即执行任务
+     */
     public static void run(Scheduler scheduler, ScheduleJobEntity scheduleJob) {
         try {
-            JobDataMap dataMap = new JobDataMap();
-            dataMap.put("JOB_PARAM_KEY", (Object)scheduleJob);
-            scheduler.triggerJob(ScheduleUtils.getJobKey(scheduleJob.getJobId()), dataMap);
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u7acb\u5373\u6267\u884c\u5b9a\u65f6\u4efb\u52a1\u5931\u8d25", e);
+        	//参数
+        	JobDataMap dataMap = new JobDataMap();
+        	dataMap.put(ScheduleJobEntity.JOB_PARAM_KEY, scheduleJob);
+        	
+            scheduler.triggerJob(getJobKey(scheduleJob.getJobId()), dataMap);
+        } catch (SchedulerException e) {
+            throw new TpfhException("立即执行定时任务失败", e);
         }
     }
 
+    /**
+     * 暂停任务
+     */
     public static void pauseJob(Scheduler scheduler, Long jobId) {
         try {
-            scheduler.pauseJob(ScheduleUtils.getJobKey(jobId));
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u6682\u505c\u5b9a\u65f6\u4efb\u52a1\u5931\u8d25", e);
+            scheduler.pauseJob(getJobKey(jobId));
+        } catch (SchedulerException e) {
+            throw new TpfhException("暂停定时任务失败", e);
         }
     }
 
+    /**
+     * 恢复任务
+     */
     public static void resumeJob(Scheduler scheduler, Long jobId) {
         try {
-            scheduler.resumeJob(ScheduleUtils.getJobKey(jobId));
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u6682\u505c\u5b9a\u65f6\u4efb\u52a1\u5931\u8d25", e);
+            scheduler.resumeJob(getJobKey(jobId));
+        } catch (SchedulerException e) {
+            throw new TpfhException("暂停定时任务失败", e);
         }
     }
 
+    /**
+     * 删除定时任务
+     */
     public static void deleteScheduleJob(Scheduler scheduler, Long jobId) {
         try {
-            scheduler.deleteJob(ScheduleUtils.getJobKey(jobId));
-        }
-        catch (SchedulerException e) {
-            throw new TpfhException("\u5220\u9664\u5b9a\u65f6\u4efb\u52a1\u5931\u8d25", e);
+            scheduler.deleteJob(getJobKey(jobId));
+        } catch (SchedulerException e) {
+            throw new TpfhException("删除定时任务失败", e);
         }
     }
 }
-

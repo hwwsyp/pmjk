@@ -1,8 +1,12 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.common.validator.group;
 
-public interface UpdateGroup {
-}
+/**
+ * 更新数据 Group
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-03-15 21:21
+ */
 
+public interface UpdateGroup {
+
+}

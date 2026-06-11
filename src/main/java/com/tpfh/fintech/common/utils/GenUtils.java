@@ -1,25 +1,28 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.commons.lang.StringUtils
- *  org.apache.commons.lang.WordUtils
- */
 package com.tpfh.fintech.common.utils;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 
+/**
+ * 代码生成器   工具类
+ */
 public class GenUtils {
-    public static String columnToJava(String columnName) {
-        return WordUtils.capitalizeFully((String)columnName, (char[])new char[]{'_'}).replace("_", "");
-    }
-
-    public static String tableToJava(String tableName, String tablePrefix) {
-        if (StringUtils.isNotBlank((String)tablePrefix)) {
-            tableName = tableName.replace(tablePrefix, "");
-        }
-        return GenUtils.columnToJava(tableName);
-    }
+	
+	/**
+	 * 列名转换成Java属性名
+	 */
+	public static String columnToJava(String columnName) {
+		return WordUtils.capitalizeFully(columnName, new char[]{'_'}).replace("_", "");
+	}
+	
+	/**
+	 * 表名转换成Java类名
+	 */
+	public static String tableToJava(String tableName, String tablePrefix) {
+		if(StringUtils.isNotBlank(tablePrefix)){
+			tableName = tableName.replace(tablePrefix, "");
+		}
+		return columnToJava(tableName);
+	}
+	
+	
 }
-

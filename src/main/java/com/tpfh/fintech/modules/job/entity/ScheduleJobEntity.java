@@ -1,102 +1,164 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.annotations.TableId
- *  com.baomidou.mybatisplus.annotations.TableName
- *  com.fasterxml.jackson.annotation.JsonFormat
- *  org.hibernate.validator.constraints.NotBlank
- */
 package com.tpfh.fintech.modules.job.entity;
 
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import java.io.Serializable;
-import java.util.Date;
+
 import org.hibernate.validator.constraints.NotBlank;
 
-@TableName(value="schedule_job")
-public class ScheduleJobEntity
-implements Serializable {
-    private static final long serialVersionUID = 1L;
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * 定时任务
+ */
+@TableName("schedule_job")
+public class ScheduleJobEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * 任务调度参数key
+	 */
     public static final String JOB_PARAM_KEY = "JOB_PARAM_KEY";
-    @TableId
-    private Long jobId;
-    @NotBlank(message="bean\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a")
-    private @NotBlank(message="bean\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a") String beanName;
-    @NotBlank(message="\u65b9\u6cd5\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a")
-    private @NotBlank(message="\u65b9\u6cd5\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a") String methodName;
-    private String params;
-    @NotBlank(message="cron\u8868\u8fbe\u5f0f\u4e0d\u80fd\u4e3a\u7a7a")
-    private @NotBlank(message="cron\u8868\u8fbe\u5f0f\u4e0d\u80fd\u4e3a\u7a7a") String cronExpression;
-    private Integer status;
-    private String remark;
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    private Date createTime;
+	
+	/**
+	 * 任务id
+	 */
+	@TableId
+	private Long jobId;
 
-    public void setJobId(Long jobId) {
-        this.jobId = jobId;
-    }
+	/**
+	 * spring bean名称
+	 */
+	@NotBlank(message="bean名称不能为空")
+	private String beanName;
+	
+	/**
+	 * 方法名
+	 */
+	@NotBlank(message="方法名称不能为空")
+	private String methodName;
+	
+	/**
+	 * 参数
+	 */
+	private String params;
+	
+	/**
+	 * cron表达式
+	 */
+	@NotBlank(message="cron表达式不能为空")
+	private String cronExpression;
 
-    public Long getJobId() {
-        return this.jobId;
-    }
+	/**
+	 * 任务状态
+	 */
+	private Integer status;
 
-    public String getBeanName() {
-        return this.beanName;
-    }
+	/**
+	 * 备注
+	 */
+	private String remark;
 
-    public void setBeanName(String beanName) {
-        this.beanName = beanName;
-    }
+	/**
+	 * 创建时间
+	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	private Date createTime;
 
-    public String getMethodName() {
-        return this.methodName;
-    }
+	/**
+	 * 设置：任务id
+	 * @param jobId 任务id
+	 */
+	public void setJobId(Long jobId) {
+		this.jobId = jobId;
+	}
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
+	/**
+	 * 获取：任务id
+	 * @return Long
+	 */
+	public Long getJobId() {
+		return jobId;
+	}
+	
+	public String getBeanName() {
+		return beanName;
+	}
 
-    public String getParams() {
-        return this.params;
-    }
+	public void setBeanName(String beanName) {
+		this.beanName = beanName;
+	}
 
-    public void setParams(String params) {
-        this.params = params;
-    }
+	public String getMethodName() {
+		return methodName;
+	}
 
-    public String getRemark() {
-        return this.remark;
-    }
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
+	}
 
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
+	public String getParams() {
+		return params;
+	}
 
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
+	public void setParams(String params) {
+		this.params = params;
+	}
 
-    public Integer getStatus() {
-        return this.status;
-    }
+	public String getRemark() {
+		return remark;
+	}
 
-    public void setCronExpression(String cronExpression) {
-        this.cronExpression = cronExpression;
-    }
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
 
-    public String getCronExpression() {
-        return this.cronExpression;
-    }
+	/**
+	 * 设置：任务状态
+	 * @param status 任务状态
+	 */
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
 
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
+	/**
+	 * 获取：任务状态
+	 * @return String
+	 */
+	public Integer getStatus() {
+		return status;
+	}
+	
+	/**
+	 * 设置：cron表达式
+	 * @param cronExpression cron表达式
+	 */
+	public void setCronExpression(String cronExpression) {
+		this.cronExpression = cronExpression;
+	}
 
-    public Date getCreateTime() {
-        return this.createTime;
-    }
+	/**
+	 * 获取：cron表达式
+	 * @return String
+	 */
+	public String getCronExpression() {
+		return cronExpression;
+	}
+	
+	/**
+	 * 设置：创建时间
+	 * @param createTime 创建时间
+	 */
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+
+	/**
+	 * 获取：创建时间
+	 * @return Date
+	 */
+	public Date getCreateTime() {
+		return createTime;
+	}
 }
-

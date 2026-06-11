@@ -1,46 +1,44 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  javax.servlet.DispatcherType
- *  javax.servlet.Filter
- *  org.springframework.boot.web.servlet.FilterRegistrationBean
- *  org.springframework.context.annotation.Bean
- *  org.springframework.context.annotation.Configuration
- *  org.springframework.web.filter.DelegatingFilterProxy
- */
 package com.tpfh.fintech.config;
 
-import com.tpfh.fintech.common.xss.XssFilter;
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.DelegatingFilterProxy;
 
+import com.tpfh.fintech.common.xss.XssFilter;
+
+import javax.servlet.DispatcherType;
+
+/**
+ * Filter配置
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-04-21 21:56
+ */
 @Configuration
 public class FilterConfig {
+
     @Bean
     public FilterRegistrationBean shiroFilterRegistration() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter((Filter)new DelegatingFilterProxy("shiroFilter"));
+        registration.setFilter(new DelegatingFilterProxy("shiroFilter"));
+        //该值缺省为false，表示生命周期由SpringApplicationContext管理，设置为true则表示由ServletContainer管理
         registration.addInitParameter("targetFilterLifecycle", "true");
         registration.setEnabled(true);
-        registration.setOrder(0x7FFFFFFE);
-        registration.addUrlPatterns(new String[]{"/*"});
+        registration.setOrder(Integer.MAX_VALUE - 1);
+        registration.addUrlPatterns("/*");
         return registration;
     }
 
     @Bean
     public FilterRegistrationBean xssFilterRegistration() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setDispatcherTypes(DispatcherType.REQUEST, new DispatcherType[0]);
-        registration.setFilter((Filter)new XssFilter());
-        registration.addUrlPatterns(new String[]{"/*"});
+        registration.setDispatcherTypes(DispatcherType.REQUEST);
+        registration.setFilter(new XssFilter());
+        registration.addUrlPatterns("/*");
         registration.setName("xssFilter");
         registration.setOrder(Integer.MAX_VALUE);
         return registration;
     }
 }
-

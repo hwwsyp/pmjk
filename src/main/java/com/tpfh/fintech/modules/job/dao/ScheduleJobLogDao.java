@@ -1,18 +1,14 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.mapper.BaseMapper
- *  org.apache.ibatis.annotations.Mapper
- */
 package com.tpfh.fintech.modules.job.dao;
 
 import com.baomidou.mybatisplus.mapper.BaseMapper;
 import com.tpfh.fintech.modules.job.entity.ScheduleJobLogEntity;
+
 import org.apache.ibatis.annotations.Mapper;
 
+/**
+ * 定时任务日志
+ */
 @Mapper
-public interface ScheduleJobLogDao
-extends BaseMapper<ScheduleJobLogEntity> {
+public interface ScheduleJobLogDao extends BaseMapper<ScheduleJobLogEntity> {
+	
 }
-

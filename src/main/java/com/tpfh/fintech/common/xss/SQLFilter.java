@@ -1,36 +1,44 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.commons.lang.StringUtils
- */
 package com.tpfh.fintech.common.xss;
 
-import com.tpfh.fintech.common.exception.TpfhException;
 import org.apache.commons.lang.StringUtils;
 
+import com.tpfh.fintech.common.exception.TpfhException;
+
+/**
+ * SQL过滤
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-04-01 16:16
+ */
 public class SQLFilter {
-    public static String sqlInject(String str) {
-        String[] keywords;
-        if (StringUtils.isBlank((String)str)) {
+
+    /**
+     * SQL注入过滤
+     * @param str  待验证的字符串
+     */
+    public static String sqlInject(String str){
+        if(StringUtils.isBlank(str)){
             return null;
         }
-        str = StringUtils.replace((String)str, (String)"'", (String)"");
-        str = StringUtils.replace((String)str, (String)"\"", (String)"");
-        str = StringUtils.replace((String)str, (String)";", (String)"");
-        str = StringUtils.replace((String)str, (String)"\\", (String)"");
+        //去掉'|"|;|\字符
+        str = StringUtils.replace(str, "'", "");
+        str = StringUtils.replace(str, "\"", "");
+        str = StringUtils.replace(str, ";", "");
+        str = StringUtils.replace(str, "\\", "");
+
+        //转换成小写
         str = str.toLowerCase();
-        String[] stringArray = keywords = new String[]{"master", "truncate", "insert", "select", "delete", "update", "declare", "alert", "drop"};
-        int n = keywords.length;
-        int n2 = 0;
-        while (n2 < n) {
-            String keyword = stringArray[n2];
-            if (str.indexOf(keyword) != -1) {
-                throw new TpfhException("\u5305\u542b\u975e\u6cd5\u5b57\u7b26");
+
+        //非法字符
+        String[] keywords = {"master", "truncate", "insert", "select", "delete", "update", "declare", "alert", "drop"};
+
+        //判断是否包含非法字符
+        for(String keyword : keywords){
+            if(str.indexOf(keyword) != -1){
+                throw new TpfhException("包含非法字符");
             }
-            ++n2;
         }
+
         return str;
     }
 }
-

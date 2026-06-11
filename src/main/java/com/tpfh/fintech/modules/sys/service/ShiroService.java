@@ -1,17 +1,27 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.modules.sys.service;
+
+import java.util.Set;
 
 import com.tpfh.fintech.modules.sys.entity.SysUserEntity;
 import com.tpfh.fintech.modules.sys.entity.SysUserTokenEntity;
-import java.util.Set;
 
+/**
+ * shiro相关接口
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-06-06 8:49
+ */
 public interface ShiroService {
-    public Set<String> getUserPermissions(long var1);
+    /**
+     * 获取用户权限列表
+     */
+    Set<String> getUserPermissions(long userId);
 
-    public SysUserTokenEntity queryByToken(String var1);
+    SysUserTokenEntity queryByToken(String token);
 
-    public SysUserEntity queryUser(Long var1);
+    /**
+     * 根据用户ID，查询用户
+     * @param userId
+     */
+    SysUserEntity queryUser(Long userId);
 }
-

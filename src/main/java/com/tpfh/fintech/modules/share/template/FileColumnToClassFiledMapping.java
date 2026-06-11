@@ -1,44 +1,44 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.modules.share.template;
 
 public class FileColumnToClassFiledMapping {
-    private Integer columnNum;
-    private String fieldName;
-    private String classType;
-    private Boolean isRequired;
+	private Integer columnNum;
+	private String fieldName;
+	private String classType;
+	private Boolean isRequired;
 
-    public Boolean getIsRequired() {
-        return this.isRequired;
-    }
+	public FileColumnToClassFiledMapping() {}
 
-    public void setIsRequired(Boolean isRequired) {
-        this.isRequired = isRequired;
-    }
+	public Boolean getIsRequired() {
+		return isRequired;
+	}
 
-    public Integer getColumnNum() {
-        return this.columnNum;
-    }
+	public void setIsRequired(Boolean isRequired) {
+		this.isRequired = isRequired;
+	}
 
-    public void setColumnNum(Integer columnNum) {
-        this.columnNum = columnNum;
-    }
 
-    public String getFieldName() {
-        return this.fieldName;
-    }
+	public Integer getColumnNum() {
+		return columnNum;
+	}
 
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
+	public void setColumnNum(Integer columnNum) {
+		this.columnNum = columnNum;
+	}
 
-    public String getClassType() {
-        return this.classType;
-    }
+	public String getFieldName() {
+		return fieldName;
+	}
 
-    public void setClassType(String classType) {
-        this.classType = classType;
-    }
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
+	}
+
+	public String getClassType() {
+		return classType;
+	}
+
+	public void setClassType(String classType) {
+		this.classType = classType;
+	}
+	
 }
-

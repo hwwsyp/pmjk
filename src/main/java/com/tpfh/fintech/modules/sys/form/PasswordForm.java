@@ -1,14 +1,20 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.modules.sys.form;
 
+/**
+ * 密码表单
+ */
 public class PasswordForm {
+    /**
+     * 原密码
+     */
     private String password;
+    /**
+     * 新密码
+     */
     private String newPassword;
 
     public String getPassword() {
-        return this.password;
+        return password;
     }
 
     public void setPassword(String password) {
@@ -16,11 +22,10 @@ public class PasswordForm {
     }
 
     public String getNewPassword() {
-        return this.newPassword;
+        return newPassword;
     }
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
     }
 }
-

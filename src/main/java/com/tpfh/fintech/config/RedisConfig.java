@@ -1,35 +1,19 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.context.annotation.Bean
- *  org.springframework.context.annotation.Configuration
- *  org.springframework.data.redis.connection.RedisConnectionFactory
- *  org.springframework.data.redis.core.HashOperations
- *  org.springframework.data.redis.core.ListOperations
- *  org.springframework.data.redis.core.RedisTemplate
- *  org.springframework.data.redis.core.SetOperations
- *  org.springframework.data.redis.core.ValueOperations
- *  org.springframework.data.redis.core.ZSetOperations
- *  org.springframework.data.redis.serializer.RedisSerializer
- *  org.springframework.data.redis.serializer.StringRedisSerializer
- */
 package com.tpfh.fintech.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/**
+ * Redis配置
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-07-70 19:22
+ */
 @Configuration
 public class RedisConfig {
     @Autowired
@@ -37,12 +21,12 @@ public class RedisConfig {
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
-        RedisTemplate redisTemplate = new RedisTemplate();
-        redisTemplate.setKeySerializer((RedisSerializer)new StringRedisSerializer());
-        redisTemplate.setHashKeySerializer((RedisSerializer)new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer((RedisSerializer)new StringRedisSerializer());
-        redisTemplate.setValueSerializer((RedisSerializer)new StringRedisSerializer());
-        redisTemplate.setConnectionFactory(this.factory);
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(factory);
         return redisTemplate;
     }
 
@@ -71,4 +55,3 @@ public class RedisConfig {
         return redisTemplate.opsForZSet();
     }
 }
-

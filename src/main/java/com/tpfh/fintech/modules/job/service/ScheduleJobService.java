@@ -1,32 +1,50 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.service.IService
- */
 package com.tpfh.fintech.modules.job.service;
 
 import com.baomidou.mybatisplus.service.IService;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.job.entity.ScheduleJobEntity;
+
 import java.util.Map;
 
-public interface ScheduleJobService
-extends IService<ScheduleJobEntity> {
-    public PageUtils queryPage(Map<String, Object> var1);
+/**
+ * 定时任务
+ */
+public interface ScheduleJobService extends IService<ScheduleJobEntity> {
 
-    public void save(ScheduleJobEntity var1);
+	PageUtils queryPage(Map<String, Object> params);
 
-    public void update(ScheduleJobEntity var1);
-
-    public void deleteBatch(Long[] var1);
-
-    public int updateBatch(Long[] var1, int var2);
-
-    public void run(Long[] var1);
-
-    public void pause(Long[] var1);
-
-    public void resume(Long[] var1);
+	/**
+	 * 保存定时任务
+	 */
+	void save(ScheduleJobEntity scheduleJob);
+	
+	/**
+	 * 更新定时任务
+	 */
+	void update(ScheduleJobEntity scheduleJob);
+	
+	/**
+	 * 批量删除定时任务
+	 */
+	void deleteBatch(Long[] jobIds);
+	
+	/**
+	 * 批量更新定时任务状态
+	 */
+	int updateBatch(Long[] jobIds, int status);
+	
+	/**
+	 * 立即执行
+	 */
+	void run(Long[] jobIds);
+	
+	/**
+	 * 暂停运行
+	 */
+	void pause(Long[] jobIds);
+	
+	/**
+	 * 恢复运行
+	 */
+	void resume(Long[] jobIds);
 }
-

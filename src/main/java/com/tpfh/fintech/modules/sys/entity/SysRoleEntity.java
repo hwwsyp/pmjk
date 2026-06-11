@@ -1,85 +1,129 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.annotations.TableField
- *  com.baomidou.mybatisplus.annotations.TableId
- *  com.baomidou.mybatisplus.annotations.TableName
- *  com.fasterxml.jackson.annotation.JsonFormat
- *  org.hibernate.validator.constraints.NotBlank
- */
 package com.tpfh.fintech.modules.sys.entity;
+
 
 import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+
+import org.hibernate.validator.constraints.NotBlank;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
-import org.hibernate.validator.constraints.NotBlank;
 
-@TableName(value="sys_role")
-public class SysRoleEntity
-implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @TableId
-    private Long roleId;
-    @NotBlank(message="\u89d2\u8272\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a")
-    private @NotBlank(message="\u89d2\u8272\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a") String roleName;
-    private String remark;
-    private Long createUserId;
-    @TableField(exist=false)
-    private List<Long> menuIdList;
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
-    private Date createTime;
+/**
+ * 角色
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年9月18日 上午9:27:38
+ */
+@TableName("sys_role")
+public class SysRoleEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * 角色ID
+	 */
+	@TableId
+	private Long roleId;
 
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
+	/**
+	 * 角色名称
+	 */
+	@NotBlank(message="角色名称不能为空")
+	private String roleName;
 
-    public Long getRoleId() {
-        return this.roleId;
-    }
+	/**
+	 * 备注
+	 */
+	private String remark;
+	
+	/**
+	 * 创建者ID
+	 */
+	private Long createUserId;
 
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-    }
+	@TableField(exist=false)
+	private List<Long> menuIdList;
+	
+	/**
+	 * 创建时间
+	 */
+	@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8") 
+	private Date createTime;
 
-    public String getRoleName() {
-        return this.roleName;
-    }
+	/**
+	 * 设置：
+	 * @param roleId 
+	 */
+	public void setRoleId(Long roleId) {
+		this.roleId = roleId;
+	}
 
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
+	/**
+	 * 获取：
+	 * @return Long
+	 */
+	public Long getRoleId() {
+		return roleId;
+	}
+	
+	/**
+	 * 设置：角色名称
+	 * @param roleName 角色名称
+	 */
+	public void setRoleName(String roleName) {
+		this.roleName = roleName;
+	}
 
-    public String getRemark() {
-        return this.remark;
-    }
+	/**
+	 * 获取：角色名称
+	 * @return String
+	 */
+	public String getRoleName() {
+		return roleName;
+	}
+	
+	/**
+	 * 设置：备注
+	 * @param remark 备注
+	 */
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
 
-    public Date getCreateTime() {
-        return this.createTime;
-    }
+	/**
+	 * 获取：备注
+	 * @return String
+	 */
+	public String getRemark() {
+		return remark;
+	}
 
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
+	public Date getCreateTime() {
+		return createTime;
+	}
 
-    public List<Long> getMenuIdList() {
-        return this.menuIdList;
-    }
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
 
-    public void setMenuIdList(List<Long> menuIdList) {
-        this.menuIdList = menuIdList;
-    }
+	public List<Long> getMenuIdList() {
+		return menuIdList;
+	}
 
-    public Long getCreateUserId() {
-        return this.createUserId;
-    }
+	public void setMenuIdList(List<Long> menuIdList) {
+		this.menuIdList = menuIdList;
+	}
 
-    public void setCreateUserId(Long createUserId) {
-        this.createUserId = createUserId;
-    }
+	public Long getCreateUserId() {
+		return createUserId;
+	}
+
+	public void setCreateUserId(Long createUserId) {
+		this.createUserId = createUserId;
+	}
+	
 }
-

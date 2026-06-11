@@ -1,15 +1,3 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.mapper.EntityWrapper
- *  com.baomidou.mybatisplus.plugins.Page
- *  com.baomidou.mybatisplus.service.impl.ServiceImpl
- *  org.apache.commons.lang.StringUtils
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.stereotype.Service
- *  org.springframework.transaction.annotation.Transactional
- */
 package com.tpfh.fintech.modules.sys.service.impl;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
@@ -25,77 +13,113 @@ import com.tpfh.fintech.modules.sys.service.SysRoleMenuService;
 import com.tpfh.fintech.modules.sys.service.SysRoleService;
 import com.tpfh.fintech.modules.sys.service.SysUserRoleService;
 import com.tpfh.fintech.modules.sys.service.SysUserService;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service(value="sysRoleService")
-public class SysRoleServiceImpl
-extends ServiceImpl<SysRoleDao, SysRoleEntity>
-implements SysRoleService {
-    @Autowired
-    private SysRoleMenuService sysRoleMenuService;
-    @Autowired
-    private SysUserService sysUserService;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 角色
+ * 
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2016年9月18日 上午9:45:12
+ */
+@Service("sysRoleService")
+public class SysRoleServiceImpl extends ServiceImpl<SysRoleDao, SysRoleEntity> implements SysRoleService {
+	@Autowired
+	private SysRoleMenuService sysRoleMenuService;
+	@Autowired
+	private SysUserService sysUserService;
     @Autowired
     private SysUserRoleService sysUserRoleService;
 
-    @Override
-    public PageUtils queryPage(Map<String, Object> params) {
-        String roleName = (String)params.get("roleName");
-        Long createUserId = (Long)params.get("createUserId");
-        Page page = this.selectPage(new Query(params).getPage(), new EntityWrapper().like(StringUtils.isNotBlank((String)roleName), "role_name", roleName).eq(createUserId != null, "create_user_id", (Object)createUserId));
-        return new PageUtils(page);
-    }
+	@Override
+	public PageUtils queryPage(Map<String, Object> params) {
+		String roleName = (String)params.get("roleName");
+		Long createUserId = (Long)params.get("createUserId");
+
+		Page<SysRoleEntity> page = this.selectPage(
+			new Query<SysRoleEntity>(params).getPage(),
+			new EntityWrapper<SysRoleEntity>()
+				.like(StringUtils.isNotBlank(roleName),"role_name", roleName)
+				.eq(createUserId != null,"create_user_id", createUserId)
+		);
+
+		return new PageUtils(page);
+	}
 
     @Override
-    @Transactional(rollbackFor={Exception.class})
+    @Transactional(rollbackFor = Exception.class)
     public void save(SysRoleEntity role) {
         role.setCreateTime(new Date());
         this.insert(role);
-        this.checkPrems(role);
-        this.sysRoleMenuService.saveOrUpdate(role.getRoleId(), role.getMenuIdList());
+
+        //检查权限是否越权
+        checkPrems(role);
+
+        //保存角色与菜单关系
+        sysRoleMenuService.saveOrUpdate(role.getRoleId(), role.getMenuIdList());
     }
 
     @Override
-    @Transactional(rollbackFor={Exception.class})
+    @Transactional(rollbackFor = Exception.class)
     public void update(SysRoleEntity role) {
         this.updateById(role);
-        this.checkPrems(role);
-        this.sysRoleMenuService.saveOrUpdate(role.getRoleId(), role.getMenuIdList());
+
+        //检查权限是否越权
+        checkPrems(role);
+
+        //更新角色与菜单关系
+        sysRoleMenuService.saveOrUpdate(role.getRoleId(), role.getMenuIdList());
     }
 
     @Override
-    @Transactional(rollbackFor={Exception.class})
+    @Transactional(rollbackFor = Exception.class)
     public void deleteBatch(Long[] roleIds) {
+        //删除角色
         this.deleteBatchIds(Arrays.asList(roleIds));
-        this.sysRoleMenuService.deleteBatch(roleIds);
-        this.sysUserRoleService.deleteBatch(roleIds);
+
+        //删除角色与菜单关联
+        sysRoleMenuService.deleteBatch(roleIds);
+
+        //删除角色与用户关联
+        sysUserRoleService.deleteBatch(roleIds);
     }
+
 
     @Override
-    public List<Long> queryRoleIdList(Long createUserId) {
-        return ((SysRoleDao)this.baseMapper).queryRoleIdList(createUserId);
-    }
+	public List<Long> queryRoleIdList(Long createUserId) {
+		return baseMapper.queryRoleIdList(createUserId);
+	}
 
-    private void checkPrems(SysRoleEntity role) {
-        if (role.getCreateUserId() == Constant.SUPER_ADMIN) {
-            return;
-        }
-        List<Long> menuIdList = this.sysUserService.queryAllMenuId(role.getCreateUserId());
-        if (!menuIdList.containsAll(role.getMenuIdList())) {
-            throw new TpfhException("\u65b0\u589e\u89d2\u8272\u7684\u6743\u9650\uff0c\u5df2\u8d85\u51fa\u4f60\u7684\u6743\u9650\u8303\u56f4");
-        }
-    }
+	/**
+	 * 检查权限是否越权
+	 */
+	private void checkPrems(SysRoleEntity role){
+		//如果不是超级管理员，则需要判断角色的权限是否超过自己的权限
+		if(role.getCreateUserId() == Constant.SUPER_ADMIN){
+			return ;
+		}
+		
+		//查询用户所拥有的菜单列表
+		List<Long> menuIdList = sysUserService.queryAllMenuId(role.getCreateUserId());
+		
+		//判断是否越权
+		if(!menuIdList.containsAll(role.getMenuIdList())){
+			throw new TpfhException("新增角色的权限，已超出你的权限范围");
+		}
+	}
 
-    @Override
-    public List<SysRoleEntity> getRolesList() {
-        return ((SysRoleDao)this.baseMapper).getRolesList();
-    }
+	@Override
+	public List<SysRoleEntity> getRolesList() {
+		// TODO Auto-generated method stub
+		return baseMapper.getRolesList();
+	}
 }
-

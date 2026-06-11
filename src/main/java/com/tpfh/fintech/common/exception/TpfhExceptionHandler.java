@@ -1,19 +1,5 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.shiro.authz.AuthorizationException
- *  org.slf4j.Logger
- *  org.slf4j.LoggerFactory
- *  org.springframework.dao.DuplicateKeyException
- *  org.springframework.web.bind.annotation.ExceptionHandler
- *  org.springframework.web.bind.annotation.RestControllerAdvice
- *  org.springframework.web.servlet.NoHandlerFoundException
- */
 package com.tpfh.fintech.common.exception;
 
-import com.tpfh.fintech.common.exception.TpfhException;
-import com.tpfh.fintech.common.utils.R;
 import org.apache.shiro.authz.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,40 +8,48 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.tpfh.fintech.common.utils.R;
+
+/**
+ * 异常处理器
+ */
 @RestControllerAdvice
 public class TpfhExceptionHandler {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-    @ExceptionHandler(value={TpfhException.class})
-    public R handleTpfhException(TpfhException e) {
-        R r = new R();
-        r.put("code", (Object)e.getCode());
-        r.put("msg", (Object)e.getMessage());
-        return r;
-    }
+	/**
+	 * 处理自定义异常
+	 */
+	@ExceptionHandler(TpfhException.class)
+	public R handleTpfhException(TpfhException e){
+		R r = new R();
+		r.put("code", e.getCode());
+		r.put("msg", e.getMessage());
 
-    @ExceptionHandler(value={NoHandlerFoundException.class})
-    public R handlerNoFoundException(Exception e) {
-        this.logger.error(e.getMessage(), (Throwable)e);
-        return R.error(404, "\u8def\u5f84\u4e0d\u5b58\u5728\uff0c\u8bf7\u68c0\u67e5\u8def\u5f84\u662f\u5426\u6b63\u786e");
-    }
+		return r;
+	}
+	
+	@ExceptionHandler(NoHandlerFoundException.class)
+ 	public R handlerNoFoundException(Exception e) {
+ 			logger.error(e.getMessage(), e);
+ 			return R.error(404, "路径不存在，请检查路径是否正确");
+ 	}
 
-    @ExceptionHandler(value={DuplicateKeyException.class})
-    public R handleDuplicateKeyException(DuplicateKeyException e) {
-        this.logger.error(e.getMessage(), (Throwable)e);
-        return R.error("\u6570\u636e\u5e93\u4e2d\u5df2\u5b58\u5728\u8be5\u8bb0\u5f55");
-    }
+	@ExceptionHandler(DuplicateKeyException.class)
+	public R handleDuplicateKeyException(DuplicateKeyException e){
+		logger.error(e.getMessage(), e);
+		return R.error("数据库中已存在该记录");
+	}
 
-    @ExceptionHandler(value={AuthorizationException.class})
-    public R handleAuthorizationException(AuthorizationException e) {
-        this.logger.error(e.getMessage(), (Throwable)e);
-        return R.error("\u6ca1\u6709\u6743\u9650\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u6388\u6743");
-    }
+	@ExceptionHandler(AuthorizationException.class)
+	public R handleAuthorizationException(AuthorizationException e){
+		logger.error(e.getMessage(), e);
+		return R.error("没有权限，请联系管理员授权");
+	}
 
-    @ExceptionHandler(value={Exception.class})
-    public R handleException(Exception e) {
-        this.logger.error(e.getMessage(), (Throwable)e);
-        return R.error();
-    }
+	@ExceptionHandler(Exception.class)
+	public R handleException(Exception e){
+		logger.error(e.getMessage(), e);
+		return R.error();
+	}
 }
-

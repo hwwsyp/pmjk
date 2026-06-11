@@ -1,27 +1,6 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  org.apache.shiro.mgt.SecurityManager
- *  org.apache.shiro.realm.Realm
- *  org.apache.shiro.session.mgt.SessionManager
- *  org.apache.shiro.spring.LifecycleBeanPostProcessor
- *  org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor
- *  org.apache.shiro.spring.web.ShiroFilterFactoryBean
- *  org.apache.shiro.web.mgt.DefaultWebSecurityManager
- *  org.apache.shiro.web.session.mgt.DefaultWebSessionManager
- *  org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator
- *  org.springframework.context.annotation.Bean
- *  org.springframework.context.annotation.Configuration
- */
 package com.tpfh.fintech.config;
 
-import com.tpfh.fintech.modules.sys.oauth2.OAuth2Filter;
-import com.tpfh.fintech.modules.sys.oauth2.OAuth2Realm;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
@@ -32,33 +11,53 @@ import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreato
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.tpfh.fintech.modules.sys.oauth2.OAuth2Filter;
+import com.tpfh.fintech.modules.sys.oauth2.OAuth2Realm;
+
+import javax.servlet.Filter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Shiro配置
+ *
+ * @author tpfh
+ * @email tpfh@tpfh.com
+ * @date 2017-04-20 18:33
+ */
 @Configuration
 public class ShiroConfig {
-    @Bean(value={"sessionManager"})
-    public SessionManager sessionManager() {
+
+    @Bean("sessionManager")
+    public SessionManager sessionManager(){
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
         sessionManager.setSessionValidationSchedulerEnabled(true);
         sessionManager.setSessionIdCookieEnabled(true);
-        sessionManager.setGlobalSessionTimeout(86400000L);
+        sessionManager.setGlobalSessionTimeout(24*60*60*1000);
         return sessionManager;
     }
 
-    @Bean(value={"securityManager"})
+    @Bean("securityManager")
     public SecurityManager securityManager(OAuth2Realm oAuth2Realm, SessionManager sessionManager) {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
-        securityManager.setRealm((Realm)oAuth2Realm);
+        securityManager.setRealm(oAuth2Realm);
         securityManager.setSessionManager(sessionManager);
+
         return securityManager;
     }
 
-    @Bean(value={"shiroFilter"})
+    @Bean("shiroFilter")
     public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager) {
         ShiroFilterFactoryBean shiroFilter = new ShiroFilterFactoryBean();
         shiroFilter.setSecurityManager(securityManager);
-        HashMap<String, OAuth2Filter> filters = new HashMap<String, OAuth2Filter>();
+
+        //oauth过滤
+        Map<String, Filter> filters = new HashMap<>();
         filters.put("oauth2", new OAuth2Filter());
         shiroFilter.setFilters(filters);
-        LinkedHashMap<String, String> filterMap = new LinkedHashMap<String, String>();
+
+        Map<String, String> filterMap = new LinkedHashMap<>();
         filterMap.put("/**/*.css", "anon");
         filterMap.put("/**/*.js", "anon");
         filterMap.put("/*.html", "anon");
@@ -79,12 +78,16 @@ public class ShiroConfig {
         filterMap.put("/project/**", "oauth2");
         filterMap.put("/finance/**", "oauth2");
         filterMap.put("/followUp/**", "oauth2");
-        filterMap.put("/pmjk/**", "oauth2");
+        
+        //add by wade in 20210722 将biz模块的所有请求加入认证
+        filterMap.put("/bbg/**", "oauth2");
+        filterMap.put("/report/**", "oauth2");//I9估值系统相关报表
         shiroFilter.setFilterChainDefinitionMap(filterMap);
+
         return shiroFilter;
     }
 
-    @Bean(value={"lifecycleBeanPostProcessor"})
+    @Bean("lifecycleBeanPostProcessor")
     public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
         return new LifecycleBeanPostProcessor();
     }
@@ -102,5 +105,5 @@ public class ShiroConfig {
         advisor.setSecurityManager(securityManager);
         return advisor;
     }
-}
 
+}

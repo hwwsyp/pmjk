@@ -1,22 +1,20 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.baomidou.mybatisplus.plugins.PaginationInterceptor
- *  org.springframework.context.annotation.Bean
- *  org.springframework.context.annotation.Configuration
- */
 package com.tpfh.fintech.config;
 
 import com.baomidou.mybatisplus.plugins.PaginationInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * mybatis-plus配置
+ */
 @Configuration
 public class MybatisPlusConfig {
+
+    /**
+     * 分页插件
+     */
     @Bean
     public PaginationInterceptor paginationInterceptor() {
         return new PaginationInterceptor();
     }
 }
-

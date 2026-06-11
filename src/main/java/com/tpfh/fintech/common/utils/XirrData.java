@@ -1,119 +1,124 @@
-/*
- * Decompiled with CFR 0.152.
- */
 package com.tpfh.fintech.common.utils;
 
-import com.tpfh.fintech.common.utils.UpbaaDate;
 import java.util.ArrayList;
-
+/**
+ * 
+ * @author 小木桩（staker）
+ * 这是真正计算xirr算法的类，通过传进来的多条现金流进行计算xirr值和收益值
+ */
 public class XirrData {
-    private static final double Max_Rate = 99999.9;
-    private static final double Min_Rate = -0.99999999;
-    private static final double Critical = 1.0E-8;
-    public static final String Error_Null_List = "NO_CASH";
-    public static final String Error_Less_Cash = "NEED_MORE_CASH";
-    public static final String Error_Date = "DATE_ORDER_ERROR";
-    private long startDays = 0L;
-    private ArrayList<UpbaaDate> listUpbaa;
 
-    public XirrData(ArrayList<UpbaaDate> listUpbaa) {
-        this.listUpbaa = listUpbaa;
+    private static final double Max_Rate=99999.9;//最大收益率
+    private static final double Min_Rate=-0.99999999;//最小收益率
+    private static final double Critical=0.00000001;//精确值
+    
+    public static final String Error_Null_List="NO_CASH";//代表传进来的list为空
+    public static final String Error_Less_Cash="NEED_MORE_CASH";//少于一条现金流
+    public static final String Error_Date="DATE_ORDER_ERROR";//传进来的现金流的第一条现金流记录的时间不是最早的时间
+
+    
+    /**
+     * 第一条现金流具体某个时间点的差值天数，这个天数应该是所有现金流里面的差值天数最大的
+     */
+    private long startDays = 0;
+    private ArrayList<UpbaaDate> listUpbaa;
+    public XirrData(ArrayList<UpbaaDate> listUpbaa){        
+        this.listUpbaa=listUpbaa;
         if (listUpbaa != null) {
             try {
-                this.startDays = listUpbaa.get(0).getDaysFrom1970();
-            }
-            catch (Exception exception) {
-                // empty catch block
-            }
+                startDays = listUpbaa.get(0).getDaysFrom1970();
+            } catch (Exception e) {
+            }       
         }
     }
-
-    public double getPal() {
-        if (this.listUpbaa == null) {
+    /**
+     * 计算收益值 
+     * @return double
+     */
+    public double getPal(){
+        if(listUpbaa==null){
             return 0.0;
         }
-        double pal = 0.0;
-        int count = this.listUpbaa.size();
-        int i = 0;
-        while (i < count) {
-            pal += this.listUpbaa.get((int)i).payment;
-            ++i;
+        double pal=0;
+        int count=listUpbaa.size();
+        for (int i = 0; i < count; i++) {
+            pal=pal+listUpbaa.get(i).payment;
         }
         return pal;
+        
     }
-
+    /**
+     * 通过传进来的多条现金流获得xirr值
+     * @return 返回收益率
+     */
     public Object getXirr() {
-        if (this.listUpbaa == null) {
+        if(listUpbaa == null){
             return Error_Null_List;
         }
-        int count = this.listUpbaa.size();
+        int count=listUpbaa.size();
         if (count <= 1) {
-            return Error_Less_Cash;
+            return Error_Less_Cash;// 如果只有一条现金流则返回Error_Less_Cash
         }
-        int i = 0;
-        while (i < count) {
-            if (this.listUpbaa.get(1).getDaysFrom1970() < this.startDays) {
-                return Error_Date;
+        for (int i = 0; i < count; i++) {
+            if (listUpbaa.get(1).getDaysFrom1970() < startDays) {
+                return Error_Date;// 如果不止一条现金流则判断第一条现金流是否为时间最早的，如果不是的话则返回ERROR_DATE
             }
-            ++i;
         }
-        boolean isEarn = this.getXNPVByRate(0.0) > 0.0;
-        double XIRR = 0.0;
-        double tempMax = 0.0;
-        double tempMin = 0.0;
+        boolean isEarn = getXNPVByRate(0) > 0;// 记录是赚钱了还是亏本了
+        double XIRR = 0;
+        double tempMax = 0;
+        double tempMin = 0;
         int calculateCount = 50;
         if (isEarn) {
-            tempMax = 99999.9;
-            tempMin = 0.0;
+            tempMax = Max_Rate;
+            tempMin = 0;
             while (calculateCount > 0) {
-                XIRR = (tempMin + tempMax) / 2.0;
-                double xnvp = this.getXNPVByRate(XIRR);
-                if (xnvp > 0.0) {
+                XIRR = (tempMin + tempMax) / 2f;
+                double xnvp = getXNPVByRate(XIRR);
+                if (xnvp > 0) {
                     tempMin = XIRR;
                 } else {
                     tempMax = XIRR;
                 }
-                if (!(Math.abs(XIRR) < 1.0E-8)) {
-                    --calculateCount;
-                    continue;
+                if (Math.abs(XIRR) < Critical) {
+                    break;
                 }
-                break;
+                calculateCount--;
             }
         } else {
-            tempMax = 0.0;
-            tempMin = -0.99999999;
+            tempMax = 0;
+            tempMin = Min_Rate;
             while (calculateCount > 0) {
-                XIRR = (tempMin + tempMax) / 2.0;
-                double xnvp = this.getXNPVByRate(XIRR);
-                if (xnvp > 0.0) {
+                XIRR = (tempMin + tempMax) / 2f;
+                double xnvp = getXNPVByRate(XIRR);
+                if (xnvp > 0) {
+ 
                     tempMin = XIRR;
                 } else {
                     tempMax = XIRR;
+ 
                 }
-                if (!(Math.abs(XIRR) < 1.0E-8)) {
-                    --calculateCount;
-                    continue;
+                if (Math.abs(XIRR) < Critical) {
+                    break;
                 }
-                break;
+                calculateCount--;
             }
         }
         return XIRR;
     }
-
     private double getXNPVByRate(double rate) {
-        double result = 0.0;
-        int size = this.listUpbaa.size();
-        int i = 0;
-        while (i < size) {
-            UpbaaDate date = this.listUpbaa.get(i);
-            result += this.getOneValue(date.payment, rate, (int)date.getDaysFrom1970() - (int)this.startDays);
-            ++i;
+        double result = 0;
+        int size = listUpbaa.size();
+        for (int i = 0; i < size; i++) {
+            UpbaaDate date = listUpbaa.get(i);
+            result = result
+                    + getOneValue(date.payment, rate, (int)date.getDaysFrom1970()
+                            - (int)startDays);
         }
         return result;
     }
-
+ 
     private double getOneValue(double payment, double rate, int dateDistance) {
-        return payment / Math.pow(1.0 + rate, (float)dateDistance / 365.0f);
+        return payment / ((Math.pow((1 + rate), dateDistance / 365f)));
     }
 }
-
