@@ -22,6 +22,8 @@ import com.tpfh.fintech.common.annotation.SysLog;
 import com.tpfh.fintech.common.utils.DateUtils;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
+import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
+import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
 import com.tpfh.fintech.modules.pmjk.releaseinfo.entity.ReleaseinfoEntity;
 import com.tpfh.fintech.modules.pmjk.releaseinfo.service.ReleaseinfoService;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
@@ -55,6 +57,10 @@ public class ReleaseinfoController
 extends AbstractController {
     @Autowired
     private ReleaseinfoService releaseinfoService;
+
+    @Autowired
+    private ProductService productService;
+
     @Value(value="${tpfh.filePath}")
     String filePath;
 
@@ -83,16 +89,35 @@ extends AbstractController {
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:releaseinfo:save"})
     public R add(@RequestBody ReleaseinfoEntity releaseinfoEntity) {
+        ProductEntity productEntity = this.productService.getInfoById(releaseinfoEntity.getProductid());
+        long versionNum = productEntity != null && productEntity.getReleaseversion() != null
+            ? productEntity.getReleaseversion()
+            : 1L;
+
+        Date now = new Date();
+        releaseinfoEntity.setVersionnum(versionNum);
+        releaseinfoEntity.setCreatetimestamp(now);
+        releaseinfoEntity.setUpdatetimestamp(now);
         this.releaseinfoService.insert(releaseinfoEntity);
-        return R.ok();
+        return R.ok().put("releaseinfoInfo", (Object)releaseinfoEntity);
     }
 
     @SysLog(value="\u66f4\u65b0")
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:releaseinfo:update"})
     public R update(@RequestBody ReleaseinfoEntity releaseinfoEntity) {
+        Date now = new Date();
+        releaseinfoEntity.setUpdatetimestamp(now);
+        long versionNum = releaseinfoEntity.getVersionnum() + 1;
+        releaseinfoEntity.setVersionnum(versionNum);
         this.releaseinfoService.updateById(releaseinfoEntity);
-        return R.ok();
+
+        ProductEntity productEntity = this.productService.getInfoById(releaseinfoEntity.getProductid());
+        productEntity.setReleaseversion(versionNum);
+        productEntity.setUpdatetimestamp(now);
+        this.productService.updateById(productEntity);
+
+        return R.ok().put("releaseinfoInfo", (Object)releaseinfoEntity);
     }
 
     @SysLog(value="\u5220\u9664")

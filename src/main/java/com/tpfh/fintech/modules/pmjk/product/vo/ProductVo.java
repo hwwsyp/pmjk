@@ -24,6 +24,7 @@ public class ProductVo {
     private String managername;
     private Integer productinfoversion;
     private Integer stakeholderversion;
+    private Integer releaseversion;
 
     public Long getId() {
         return this.id;
@@ -71,6 +72,10 @@ public class ProductVo {
 
     public Integer getStakeholderversion() {
         return this.stakeholderversion;
+    }
+
+    public Integer getReleaseversion() {
+        return this.releaseversion;
     }
 
     public void setId(Long id) {
@@ -121,6 +126,10 @@ public class ProductVo {
 
     public void setStakeholderversion(Integer stakeholderversion) {
         this.stakeholderversion = stakeholderversion;
+    }
+
+    public void setReleaseversion(Integer releaseversion) {
+        this.releaseversion = releaseversion;
     }
 
     public boolean equals(Object o) {
