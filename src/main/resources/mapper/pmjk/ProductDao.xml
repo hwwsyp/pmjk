@@ -36,9 +36,9 @@
     <!-- 查询分页信息 -->
     <select id="getProductListForPage" resultType="com.tpfh.fintech.modules.pmjk.product.vo.ProductVo"> 
 		 
-		 select lll.id, lll.PRODUCTNAME, lll.PRODUCTSHORTNAME, lll.producttype, lll.manager, lll.issueid, lll.name as releasename, lll.createtimestamp, lll.updatetimestamp, lll.productinfoversion, rr.orgname as managername
+		 select lll.id, lll.PRODUCTNAME, lll.PRODUCTSHORTNAME, lll.producttype, lll.manager, lll.issueid, lll.name as releasename, lll.createtimestamp, lll.updatetimestamp, lll.productinfoversion, lll.stakeholderversion, rr.orgname as managername
 			from (
-			    select l.id, r.PRODUCTNAME, r.PRODUCTSHORTNAME, l.producttype, r.MANAGER , i.ISSUEID, s.name, l.createtimestamp, l.updatetimestamp, l.productinfoversion
+			    select l.id, r.PRODUCTNAME, r.PRODUCTSHORTNAME, l.producttype, r.MANAGER , i.ISSUEID, s.name, l.createtimestamp, l.updatetimestamp, l.productinfoversion, l.stakeholderversion
 			    from pmjk_product l 
 			    inner join pmjk_productinfo r on l.id = r.productid and l.PRODUCTINFOVERSION = r.versionnum
 			    inner join pmjk_releaseinfo i on i.productid = l.id and l.releaseversion = i.VERSIONNUM

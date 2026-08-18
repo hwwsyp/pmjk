@@ -17,6 +17,8 @@ package com.tpfh.fintech.modules.pmjk.stakeholder.controller;
 import com.tpfh.fintech.common.annotation.SysLog;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
+import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
+import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
 import com.tpfh.fintech.modules.pmjk.stakeholder.entity.StakeholderEntity;
 import com.tpfh.fintech.modules.pmjk.stakeholder.service.StakeholderService;
 import com.tpfh.fintech.modules.sys.controller.AbstractController;
@@ -39,6 +41,9 @@ public class StakeholderController
 extends AbstractController {
     @Autowired
     private StakeholderService stakeholderService;
+
+    @Autowired
+    private ProductService productService;
 
     @GetMapping(value={"/list"})
     @RequiresPermissions(value={"pmjk:stakeholder:list"})
@@ -65,11 +70,17 @@ extends AbstractController {
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:stakeholder:save"})
     public R add(@RequestBody StakeholderEntity stakeholderEntity) {
+        ProductEntity productEntity = this.productService.getInfoById(stakeholderEntity.getProductid());
+        long versionNum = productEntity != null && productEntity.getStakeholderversion() != null
+            ? productEntity.getStakeholderversion()
+            : 1L;
+
         Date now = new Date();
+        stakeholderEntity.setVersionnum(versionNum);
         stakeholderEntity.setCreatetimestamp(now);
         stakeholderEntity.setUpdatetimestamp(now);
         this.stakeholderService.insert(stakeholderEntity);
-        return R.ok();
+        return R.ok().put("stakeholderInfo", (Object)stakeholderEntity);
     }
 
     @SysLog(value="\u66f4\u65b0")
@@ -78,8 +89,16 @@ extends AbstractController {
     public R update(@RequestBody StakeholderEntity stakeholderEntity) {
         Date now = new Date();
         stakeholderEntity.setUpdatetimestamp(now);
+        long versionNum = stakeholderEntity.getVersionnum() + 1;
+        stakeholderEntity.setVersionnum(versionNum);
         this.stakeholderService.updateById(stakeholderEntity);
-        return R.ok();
+
+        ProductEntity productEntity = this.productService.getInfoById(stakeholderEntity.getProductid());
+        productEntity.setStakeholderversion(versionNum);
+        productEntity.setUpdatetimestamp(now);
+        this.productService.updateById(productEntity);
+
+        return R.ok().put("stakeholderInfo", (Object)stakeholderEntity);
     }
 
     @SysLog(value="\u5220\u9664")
