@@ -25,6 +25,8 @@ public class ProductVo {
     private Integer productinfoversion;
     private Integer stakeholderversion;
     private Integer releaseversion;
+    private Integer creditenhanceversion;
+    private Integer otherversion;
 
     public Long getId() {
         return this.id;
@@ -76,6 +78,14 @@ public class ProductVo {
 
     public Integer getReleaseversion() {
         return this.releaseversion;
+    }
+
+    public Integer getCreditenhanceversion() {
+        return this.creditenhanceversion;
+    }
+
+    public Integer getOtherversion() {
+        return this.otherversion;
     }
 
     public void setId(Long id) {
@@ -130,6 +140,14 @@ public class ProductVo {
 
     public void setReleaseversion(Integer releaseversion) {
         this.releaseversion = releaseversion;
+    }
+
+    public void setCreditenhanceversion(Integer creditenhanceversion) {
+        this.creditenhanceversion = creditenhanceversion;
+    }
+
+    public void setOtherversion(Integer otherversion) {
+        this.otherversion = otherversion;
     }
 
     public boolean equals(Object o) {
