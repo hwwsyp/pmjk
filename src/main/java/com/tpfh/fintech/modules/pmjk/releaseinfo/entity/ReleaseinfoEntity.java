@@ -6,6 +6,8 @@
  */
 package com.tpfh.fintech.modules.pmjk.releaseinfo.entity;
 
+import java.util.Date;
+
 import com.baomidou.mybatisplus.annotations.TableName;
 
 @TableName(value="pmjk_releaseinfo")
@@ -22,8 +24,29 @@ public class ReleaseinfoEntity {
     private Long ratingtype;
     private Long ratinglevel;
     private Long versionnum;
+    
+    private Date createtimestamp;
+    private Date updatetimestamp;
+    
+    
 
-    public Long getId() {
+    public Date getCreatetimestamp() {
+		return createtimestamp;
+	}
+
+	public void setCreatetimestamp(Date createtimestamp) {
+		this.createtimestamp = createtimestamp;
+	}
+
+	public Date getUpdatetimestamp() {
+		return updatetimestamp;
+	}
+
+	public void setUpdatetimestamp(Date updatetimestamp) {
+		this.updatetimestamp = updatetimestamp;
+	}
+
+	public Long getId() {
         return this.id;
     }
 
