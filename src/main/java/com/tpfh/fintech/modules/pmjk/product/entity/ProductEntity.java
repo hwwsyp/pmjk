@@ -6,6 +6,10 @@
  */
 package com.tpfh.fintech.modules.pmjk.product.entity;
 
+import java.util.Date;
+
+import javax.print.event.PrintJobAdapter;
+
 import com.baomidou.mybatisplus.annotations.TableName;
 
 @TableName(value="pmjk_product")
@@ -19,8 +23,37 @@ public class ProductEntity {
     private Long otherversion;
     private String createuser;
     private String removeflag;
+    private String islock;
+    
+    private Date createtimestamp;
+    private Date updatetimestamp;
+    
 
-    public Long getId() {
+    public Date getCreatetimestamp() {
+		return createtimestamp;
+	}
+
+	public void setCreatetimestamp(Date createtimestamp) {
+		this.createtimestamp = createtimestamp;
+	}
+
+	public Date getUpdatetimestamp() {
+		return updatetimestamp;
+	}
+
+	public void setUpdatetimestamp(Date updatetimestamp) {
+		this.updatetimestamp = updatetimestamp;
+	}
+
+	public String getIslock() {
+		return islock;
+	}
+
+	public void setIslock(String islock) {
+		this.islock = islock;
+	}
+
+	public Long getId() {
         return this.id;
     }
 

@@ -58,6 +58,8 @@ spring:
     jackson:
         time-zone: GMT+8
         date-format: yyyy-MM-dd HH:mm:ss
+        serialization:
+           WRITE_BIGDECIMAL_AS_PLAIN: true  # 为了防止bigdecimal的大数字在前端展示出现科学计数法
     mvc:
         throw-exception-if-no-handler-found: true
         static-path-pattern: /static/**

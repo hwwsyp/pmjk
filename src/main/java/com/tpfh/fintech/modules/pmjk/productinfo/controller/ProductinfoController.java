@@ -22,6 +22,8 @@ import com.tpfh.fintech.common.annotation.SysLog;
 import com.tpfh.fintech.common.utils.DateUtils;
 import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
+import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
+import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
 import com.tpfh.fintech.modules.pmjk.productinfo.entity.ProductinfoEntity;
 import com.tpfh.fintech.modules.pmjk.productinfo.service.ProductinfoService;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
@@ -55,6 +57,10 @@ public class ProductinfoController
 extends AbstractController {
     @Autowired
     private ProductinfoService productinfoService;
+    
+    @Autowired
+    private ProductService productService;
+    
     @Value(value="${tpfh.filePath}")
     String filePath;
 
@@ -83,6 +89,27 @@ extends AbstractController {
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:productinfo:save"})
     public R add(@RequestBody ProductinfoEntity productinfoEntity) {
+    	//新增项目信息之前，先把总的项目主干加上
+    	ProductEntity productEntity = new ProductEntity();
+    	productEntity.setCreateuser(this.getUser().getUserId().toString());
+    	productEntity.setCreditenhanceversion(1l);
+    	productEntity.setOtherversion(1l);
+    	productEntity.setProductinfoversion(1l);
+    	productEntity.setProducttype(productinfoEntity.getPmtype().toString());//项目类型
+    	productEntity.setReleaseversion(1l);
+    	productEntity.setIslock("0");//是否锁定
+    	productEntity.setRemoveflag("0");//是否删除
+    	productEntity.setStakeholderversion(1l);
+    	
+    	Date now = new Date();
+    	productEntity.setCreatetimestamp(now);
+    	productEntity.setUpdatetimestamp(now);
+    	productService.insert(productEntity);
+    	
+    	productinfoEntity.setProductid(productEntity.getId());//获取当前的项目id
+    	productinfoEntity.setVersionnum(1l);//设置初代版本号
+    	productinfoEntity.setCreatetimestamp(now);
+    	productinfoEntity.setUpdatetimestamp(now);
         this.productinfoService.insert(productinfoEntity);
         return R.ok();
     }
@@ -91,7 +118,18 @@ extends AbstractController {
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:productinfo:update"})
     public R update(@RequestBody ProductinfoEntity productinfoEntity) {
-        this.productinfoService.updateById(productinfoEntity);
+    	productinfoEntity.setUpdatetimestamp(new Date());
+    	//info的版本号+1
+    	long versionNum = productinfoEntity.getVersionnum() + 1;
+    	productinfoEntity.setVersionnum(versionNum);
+    	productinfoService.updateById(productinfoEntity);
+    	
+    	//更新当前info的版本号
+    	ProductEntity productEntity = productService.getInfoById(productinfoEntity.getProductid());
+    	productEntity.setProductinfoversion(versionNum);
+    	productEntity.setUpdatetimestamp(new Date());
+    	productService.updateById(productEntity);
+    	
         return R.ok();
     }
 
