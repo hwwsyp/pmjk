@@ -24,6 +24,8 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
 import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
 import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
+import com.tpfh.fintech.modules.pmjk.productcontact.entity.ProductcontactEntity;
+import com.tpfh.fintech.modules.pmjk.productcontact.service.ProductcontactService;
 import com.tpfh.fintech.modules.pmjk.releaseinfo.entity.ReleaseinfoEntity;
 import com.tpfh.fintech.modules.pmjk.releaseinfo.service.ReleaseinfoService;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
@@ -60,6 +62,9 @@ extends AbstractController {
 
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private ProductcontactService productcontactService;
 
     @Value(value="${tpfh.filePath}")
     String filePath;
