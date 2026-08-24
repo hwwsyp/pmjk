@@ -115,12 +115,17 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:releaseinfo:update"})
     public R update(@RequestBody ReleaseinfoVo releaseinfoVo) {
         Date now = new Date();
-        releaseinfoVo.setUpdatetimestamp(now);
-        long versionNum = releaseinfoVo.getVersionnum() + 1;
-        releaseinfoVo.setVersionnum(versionNum);
-        this.releaseinfoService.updateById((ReleaseinfoEntity)releaseinfoVo);
-
         ProductEntity productEntity = this.productService.getInfoById(releaseinfoVo.getProductid());
+        long versionNum = (productEntity != null && productEntity.getReleaseversion() != null
+            ? productEntity.getReleaseversion()
+            : releaseinfoVo.getVersionnum()) + 1L;
+
+        releaseinfoVo.setId(null);
+        releaseinfoVo.setVersionnum(versionNum);
+        releaseinfoVo.setCreatetimestamp(now);
+        releaseinfoVo.setUpdatetimestamp(now);
+        this.releaseinfoService.insert((ReleaseinfoEntity)releaseinfoVo);
+
         productEntity.setReleaseversion(versionNum);
         productEntity.setUpdatetimestamp(now);
         this.productService.updateById(productEntity);
