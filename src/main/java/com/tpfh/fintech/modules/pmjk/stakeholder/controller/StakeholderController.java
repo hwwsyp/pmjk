@@ -88,12 +88,17 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:stakeholder:update"})
     public R update(@RequestBody StakeholderEntity stakeholderEntity) {
         Date now = new Date();
-        stakeholderEntity.setUpdatetimestamp(now);
-        long versionNum = stakeholderEntity.getVersionnum() + 1;
-        stakeholderEntity.setVersionnum(versionNum);
-        this.stakeholderService.updateById(stakeholderEntity);
-
         ProductEntity productEntity = this.productService.getInfoById(stakeholderEntity.getProductid());
+        long versionNum = (productEntity != null && productEntity.getStakeholderversion() != null
+            ? productEntity.getStakeholderversion()
+            : stakeholderEntity.getVersionnum()) + 1L;
+
+        stakeholderEntity.setId(null);
+        stakeholderEntity.setVersionnum(versionNum);
+        stakeholderEntity.setCreatetimestamp(now);
+        stakeholderEntity.setUpdatetimestamp(now);
+        this.stakeholderService.insert(stakeholderEntity);
+
         productEntity.setStakeholderversion(versionNum);
         productEntity.setUpdatetimestamp(now);
         this.productService.updateById(productEntity);
