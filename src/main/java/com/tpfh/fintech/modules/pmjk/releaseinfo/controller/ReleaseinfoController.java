@@ -24,10 +24,10 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
 import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
 import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
-import com.tpfh.fintech.modules.pmjk.productcontact.entity.ProductcontactEntity;
 import com.tpfh.fintech.modules.pmjk.productcontact.service.ProductcontactService;
 import com.tpfh.fintech.modules.pmjk.releaseinfo.entity.ReleaseinfoEntity;
 import com.tpfh.fintech.modules.pmjk.releaseinfo.service.ReleaseinfoService;
+import com.tpfh.fintech.modules.pmjk.releaseinfo.vo.ReleaseinfoVo;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
 import com.tpfh.fintech.modules.share.template.FileToClassMapping;
 import com.tpfh.fintech.modules.share.template.ReadDataFromFileTemplate;
@@ -87,42 +87,48 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:releaseinfo:info"})
     public R info(@PathVariable(value="productid") Long productid, @PathVariable(value="versionnum") Long versionnum) {
         ReleaseinfoEntity releaseinfoInfo = this.releaseinfoService.getInfoByProductidAndVersionnum(productid, versionnum);
-        return R.ok().put("releaseinfoInfo", (Object)releaseinfoInfo);
+        ReleaseinfoVo releaseinfoVo = this.buildReleaseinfoVo(releaseinfoInfo);
+        return R.ok().put("releaseinfoInfo", (Object)releaseinfoVo);
     }
 
     @SysLog(value="\u65b0\u589e")
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:releaseinfo:save"})
-    public R add(@RequestBody ReleaseinfoEntity releaseinfoEntity) {
-        ProductEntity productEntity = this.productService.getInfoById(releaseinfoEntity.getProductid());
+    public R add(@RequestBody ReleaseinfoVo releaseinfoVo) {
+        ProductEntity productEntity = this.productService.getInfoById(releaseinfoVo.getProductid());
         long versionNum = productEntity != null && productEntity.getReleaseversion() != null
             ? productEntity.getReleaseversion()
             : 1L;
 
         Date now = new Date();
-        releaseinfoEntity.setVersionnum(versionNum);
-        releaseinfoEntity.setCreatetimestamp(now);
-        releaseinfoEntity.setUpdatetimestamp(now);
-        this.releaseinfoService.insert(releaseinfoEntity);
-        return R.ok().put("releaseinfoInfo", (Object)releaseinfoEntity);
+        releaseinfoVo.setVersionnum(versionNum);
+        releaseinfoVo.setCreatetimestamp(now);
+        releaseinfoVo.setUpdatetimestamp(now);
+        this.releaseinfoService.insert((ReleaseinfoEntity)releaseinfoVo);
+        this.productcontactService.syncReleaseinfoContacts(releaseinfoVo.getId(), releaseinfoVo.getContactIds());
+        releaseinfoVo.setContactIds(this.productcontactService.getContactIdsByReleaseinfoId(releaseinfoVo.getId()));
+        return R.ok().put("releaseinfoInfo", (Object)releaseinfoVo);
     }
 
     @SysLog(value="\u66f4\u65b0")
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:releaseinfo:update"})
-    public R update(@RequestBody ReleaseinfoEntity releaseinfoEntity) {
+    public R update(@RequestBody ReleaseinfoVo releaseinfoVo) {
         Date now = new Date();
-        releaseinfoEntity.setUpdatetimestamp(now);
-        long versionNum = releaseinfoEntity.getVersionnum() + 1;
-        releaseinfoEntity.setVersionnum(versionNum);
-        this.releaseinfoService.updateById(releaseinfoEntity);
+        releaseinfoVo.setUpdatetimestamp(now);
+        long versionNum = releaseinfoVo.getVersionnum() + 1;
+        releaseinfoVo.setVersionnum(versionNum);
+        this.releaseinfoService.updateById((ReleaseinfoEntity)releaseinfoVo);
 
-        ProductEntity productEntity = this.productService.getInfoById(releaseinfoEntity.getProductid());
+        ProductEntity productEntity = this.productService.getInfoById(releaseinfoVo.getProductid());
         productEntity.setReleaseversion(versionNum);
         productEntity.setUpdatetimestamp(now);
         this.productService.updateById(productEntity);
 
-        return R.ok().put("releaseinfoInfo", (Object)releaseinfoEntity);
+        this.productcontactService.syncReleaseinfoContacts(releaseinfoVo.getId(), releaseinfoVo.getContactIds());
+        releaseinfoVo.setContactIds(this.productcontactService.getContactIdsByReleaseinfoId(releaseinfoVo.getId()));
+
+        return R.ok().put("releaseinfoInfo", (Object)releaseinfoVo);
     }
 
     @SysLog(value="\u5220\u9664")
@@ -174,6 +180,29 @@ extends AbstractController {
         ExcelReadDataFromFileTemplate<ReleaseinfoEntity> readData = new ExcelReadDataFromFileTemplate<ReleaseinfoEntity>();
         list = ((ReadDataFromFileTemplate)readData).parseFile(file, fileToTableMapping, ReleaseinfoEntity.class);
         return list;
+    }
+
+    private ReleaseinfoVo buildReleaseinfoVo(ReleaseinfoEntity releaseinfoInfo) {
+        if (releaseinfoInfo == null) {
+            return null;
+        }
+        ReleaseinfoVo releaseinfoVo = new ReleaseinfoVo();
+        releaseinfoVo.setId(releaseinfoInfo.getId());
+        releaseinfoVo.setProductid(releaseinfoInfo.getProductid());
+        releaseinfoVo.setIssuesecurity(releaseinfoInfo.getIssuesecurity());
+        releaseinfoVo.setIssueway(releaseinfoInfo.getIssueway());
+        releaseinfoVo.setIssuemarketid(releaseinfoInfo.getIssuemarketid());
+        releaseinfoVo.setIssuemarketname(releaseinfoInfo.getIssuemarketname());
+        releaseinfoVo.setIssueid(releaseinfoInfo.getIssueid());
+        releaseinfoVo.setIssuecountryid(releaseinfoInfo.getIssuecountryid());
+        releaseinfoVo.setIssueindustryid(releaseinfoInfo.getIssueindustryid());
+        releaseinfoVo.setRatingtype(releaseinfoInfo.getRatingtype());
+        releaseinfoVo.setRatinglevel(releaseinfoInfo.getRatinglevel());
+        releaseinfoVo.setVersionnum(releaseinfoInfo.getVersionnum());
+        releaseinfoVo.setCreatetimestamp(releaseinfoInfo.getCreatetimestamp());
+        releaseinfoVo.setUpdatetimestamp(releaseinfoInfo.getUpdatetimestamp());
+        releaseinfoVo.setContactIds(this.productcontactService.getContactIdsByReleaseinfoId(releaseinfoInfo.getId()));
+        return releaseinfoVo;
     }
 }
 

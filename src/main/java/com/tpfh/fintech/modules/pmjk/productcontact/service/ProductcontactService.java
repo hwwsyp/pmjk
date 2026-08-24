@@ -22,5 +22,9 @@ extends IService<ProductcontactEntity> {
     public List<ProductcontactEntity> getInfoList(HashMap<String, Object> var1);
 
     public List<BaseInstitutionscontactEntity> getContactList(HashMap<String, Object> var1);
+
+    public void syncReleaseinfoContacts(Long releaseinfoId, List<Long> contactIds);
+
+    public List<Long> getContactIdsByReleaseinfoId(Long releaseinfoId);
 }
 
