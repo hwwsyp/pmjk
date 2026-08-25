@@ -7,6 +7,7 @@
 package com.tpfh.fintech.modules.pmjk.borrowinfo.entity;
 
 import com.baomidou.mybatisplus.annotations.TableName;
+import java.util.Date;
 
 @TableName(value="pmjk_borrowinfo")
 public class BorrowinfoEntity {
@@ -14,6 +15,9 @@ public class BorrowinfoEntity {
     private String type;
     private String content;
     private Long creditenhanceid;
+    private Date createtimestamp;
+    private Date updatetimestamp;
+    private String islock;
 
     public Long getId() {
         return this.id;
@@ -45,6 +49,30 @@ public class BorrowinfoEntity {
 
     public void setCreditenhanceid(Long creditenhanceid) {
         this.creditenhanceid = creditenhanceid;
+    }
+
+    public Date getCreatetimestamp() {
+        return this.createtimestamp;
+    }
+
+    public Date getUpdatetimestamp() {
+        return this.updatetimestamp;
+    }
+
+    public String getIslock() {
+        return this.islock;
+    }
+
+    public void setCreatetimestamp(Date createtimestamp) {
+        this.createtimestamp = createtimestamp;
+    }
+
+    public void setUpdatetimestamp(Date updatetimestamp) {
+        this.updatetimestamp = updatetimestamp;
+    }
+
+    public void setIslock(String islock) {
+        this.islock = islock;
     }
 
     public boolean equals(Object o) {

@@ -83,16 +83,20 @@ extends AbstractController {
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:borrowinfo:save"})
     public R add(@RequestBody BorrowinfoEntity borrowinfoEntity) {
+        Date now = new Date();
+        borrowinfoEntity.setCreatetimestamp(now);
+        borrowinfoEntity.setUpdatetimestamp(now);
         this.borrowinfoService.insert(borrowinfoEntity);
-        return R.ok();
+        return R.ok().put("borrowinfoInfo", (Object)borrowinfoEntity);
     }
 
     @SysLog(value="\u66f4\u65b0")
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:borrowinfo:update"})
     public R update(@RequestBody BorrowinfoEntity borrowinfoEntity) {
+        borrowinfoEntity.setUpdatetimestamp(new Date());
         this.borrowinfoService.updateById(borrowinfoEntity);
-        return R.ok();
+        return R.ok().put("borrowinfoInfo", (Object)borrowinfoEntity);
     }
 
     @SysLog(value="\u5220\u9664")

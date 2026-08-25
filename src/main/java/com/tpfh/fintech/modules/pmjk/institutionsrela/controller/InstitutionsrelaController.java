@@ -97,6 +97,9 @@ extends AbstractController {
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:institutionsrela:save"})
     public R add(@RequestBody InstitutionsrelaVo institutionsrelaVo) {
+        Date now = new Date();
+        institutionsrelaVo.setCreatetimestamp(now);
+        institutionsrelaVo.setUpdatetimestamp(now);
         this.institutionsrelaService.insert((InstitutionsrelaEntity)institutionsrelaVo);
         this.productcontactService.syncInstitutionsrelaContacts(institutionsrelaVo.getId(), institutionsrelaVo.getContactIds());
         institutionsrelaVo.setContactIds(this.productcontactService.getContactIdsByInstitutionsrelaId(institutionsrelaVo.getId()));
@@ -107,7 +110,10 @@ extends AbstractController {
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:institutionsrela:update"})
     public R update(@RequestBody InstitutionsrelaVo institutionsrelaVo) {
+        Date now = new Date();
         institutionsrelaVo.setId(null);
+        institutionsrelaVo.setCreatetimestamp(now);
+        institutionsrelaVo.setUpdatetimestamp(now);
         this.institutionsrelaService.insert((InstitutionsrelaEntity)institutionsrelaVo);
         this.productcontactService.syncInstitutionsrelaContacts(institutionsrelaVo.getId(), institutionsrelaVo.getContactIds());
         institutionsrelaVo.setContactIds(this.productcontactService.getContactIdsByInstitutionsrelaId(institutionsrelaVo.getId()));
