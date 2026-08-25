@@ -24,6 +24,8 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
 import com.tpfh.fintech.modules.pmjk.institutionsrela.entity.InstitutionsrelaEntity;
 import com.tpfh.fintech.modules.pmjk.institutionsrela.service.InstitutionsrelaService;
+import com.tpfh.fintech.modules.pmjk.institutionsrela.vo.InstitutionsrelaVo;
+import com.tpfh.fintech.modules.pmjk.productcontact.service.ProductcontactService;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
 import com.tpfh.fintech.modules.share.template.FileToClassMapping;
 import com.tpfh.fintech.modules.share.template.ReadDataFromFileTemplate;
@@ -55,6 +57,10 @@ public class InstitutionsrelaController
 extends AbstractController {
     @Autowired
     private InstitutionsrelaService institutionsrelaService;
+
+    @Autowired
+    private ProductcontactService productcontactService;
+
     @Value(value="${tpfh.filePath}")
     String filePath;
 
@@ -76,7 +82,8 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:institutionsrela:info"})
     public R info(@PathVariable(value="id") Long id) {
         InstitutionsrelaEntity institutionsrelaInfo = this.institutionsrelaService.getInfoById(id);
-        return R.ok().put("institutionsrelaInfo", (Object)institutionsrelaInfo);
+        InstitutionsrelaVo institutionsrelaVo = this.buildInstitutionsrelaVo(institutionsrelaInfo);
+        return R.ok().put("institutionsrelaInfo", (Object)institutionsrelaVo);
     }
 
     @GetMapping(value={"/info/{creditenhanceid}/{danbaorentype}"})
@@ -89,17 +96,22 @@ extends AbstractController {
     @SysLog(value="\u65b0\u589e")
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:institutionsrela:save"})
-    public R add(@RequestBody InstitutionsrelaEntity institutionsrelaEntity) {
-        this.institutionsrelaService.insert(institutionsrelaEntity);
-        return R.ok();
+    public R add(@RequestBody InstitutionsrelaVo institutionsrelaVo) {
+        this.institutionsrelaService.insert((InstitutionsrelaEntity)institutionsrelaVo);
+        this.productcontactService.syncInstitutionsrelaContacts(institutionsrelaVo.getId(), institutionsrelaVo.getContactIds());
+        institutionsrelaVo.setContactIds(this.productcontactService.getContactIdsByInstitutionsrelaId(institutionsrelaVo.getId()));
+        return R.ok().put("institutionsrelaInfo", (Object)institutionsrelaVo);
     }
 
     @SysLog(value="\u66f4\u65b0")
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:institutionsrela:update"})
-    public R update(@RequestBody InstitutionsrelaEntity institutionsrelaEntity) {
-        this.institutionsrelaService.updateById(institutionsrelaEntity);
-        return R.ok();
+    public R update(@RequestBody InstitutionsrelaVo institutionsrelaVo) {
+        institutionsrelaVo.setId(null);
+        this.institutionsrelaService.insert((InstitutionsrelaEntity)institutionsrelaVo);
+        this.productcontactService.syncInstitutionsrelaContacts(institutionsrelaVo.getId(), institutionsrelaVo.getContactIds());
+        institutionsrelaVo.setContactIds(this.productcontactService.getContactIdsByInstitutionsrelaId(institutionsrelaVo.getId()));
+        return R.ok().put("institutionsrelaInfo", (Object)institutionsrelaVo);
     }
 
     @SysLog(value="\u5220\u9664")
@@ -151,6 +163,23 @@ extends AbstractController {
         ExcelReadDataFromFileTemplate<InstitutionsrelaEntity> readData = new ExcelReadDataFromFileTemplate<InstitutionsrelaEntity>();
         list = ((ReadDataFromFileTemplate)readData).parseFile(file, fileToTableMapping, InstitutionsrelaEntity.class);
         return list;
+    }
+
+    private InstitutionsrelaVo buildInstitutionsrelaVo(InstitutionsrelaEntity institutionsrelaInfo) {
+        if (institutionsrelaInfo == null) {
+            return null;
+        }
+        InstitutionsrelaVo institutionsrelaVo = new InstitutionsrelaVo();
+        institutionsrelaVo.setId(institutionsrelaInfo.getId());
+        institutionsrelaVo.setDanbaorentype(institutionsrelaInfo.getDanbaorentype());
+        institutionsrelaVo.setInstitutionsid(institutionsrelaInfo.getInstitutionsid());
+        institutionsrelaVo.setInternalratinglevel(institutionsrelaInfo.getInternalratinglevel());
+        institutionsrelaVo.setInternalratinguser(institutionsrelaInfo.getInternalratinguser());
+        institutionsrelaVo.setInternalratingdate(institutionsrelaInfo.getInternalratingdate());
+        institutionsrelaVo.setExternalratingdesc(institutionsrelaInfo.getExternalratingdesc());
+        institutionsrelaVo.setCreditenhanceid(institutionsrelaInfo.getCreditenhanceid());
+        institutionsrelaVo.setContactIds(this.productcontactService.getContactIdsByInstitutionsrelaId(institutionsrelaInfo.getId()));
+        return institutionsrelaVo;
     }
 }
 

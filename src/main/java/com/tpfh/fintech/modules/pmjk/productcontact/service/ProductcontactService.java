@@ -26,5 +26,9 @@ extends IService<ProductcontactEntity> {
     public void syncReleaseinfoContacts(Long releaseinfoId, List<Long> contactIds);
 
     public List<Long> getContactIdsByReleaseinfoId(Long releaseinfoId);
+
+    public void syncInstitutionsrelaContacts(Long institutionsrelaId, List<Long> contactIds);
+
+    public List<Long> getContactIdsByInstitutionsrelaId(Long institutionsrelaId);
 }
 

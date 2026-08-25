@@ -1,19 +1,5 @@
 /*
  * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.alibaba.fastjson2.JSONObject
- *  org.apache.shiro.authz.annotation.RequiresPermissions
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.beans.factory.annotation.Value
- *  org.springframework.web.bind.annotation.GetMapping
- *  org.springframework.web.bind.annotation.PathVariable
- *  org.springframework.web.bind.annotation.PostMapping
- *  org.springframework.web.bind.annotation.RequestBody
- *  org.springframework.web.bind.annotation.RequestMapping
- *  org.springframework.web.bind.annotation.RequestParam
- *  org.springframework.web.bind.annotation.RestController
- *  org.springframework.web.multipart.MultipartFile
  */
 package com.tpfh.fintech.modules.pmjk.creditenhance.controller;
 
@@ -24,6 +10,9 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
 import com.tpfh.fintech.modules.pmjk.creditenhance.entity.CreditenhanceEntity;
 import com.tpfh.fintech.modules.pmjk.creditenhance.service.CreditenhanceService;
+import com.tpfh.fintech.modules.pmjk.creditenhance.vo.CreditenhanceVo;
+import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
+import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
 import com.tpfh.fintech.modules.share.template.FileToClassMapping;
 import com.tpfh.fintech.modules.share.template.ReadDataFromFileTemplate;
@@ -55,6 +44,10 @@ public class CreditenhanceController
 extends AbstractController {
     @Autowired
     private CreditenhanceService creditenhanceService;
+
+    @Autowired
+    private ProductService productService;
+
     @Value(value="${tpfh.filePath}")
     String filePath;
 
@@ -82,17 +75,41 @@ extends AbstractController {
     @SysLog(value="\u65b0\u589e")
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:creditenhance:save"})
-    public R add(@RequestBody CreditenhanceEntity creditenhanceEntity) {
-        this.creditenhanceService.insert(creditenhanceEntity);
-        return R.ok();
+    public R add(@RequestBody CreditenhanceVo creditenhanceVo) {
+        ProductEntity productEntity = this.productService.getInfoById(creditenhanceVo.getProductid());
+        long versionNum = productEntity != null && productEntity.getCreditenhanceversion() != null
+            ? productEntity.getCreditenhanceversion()
+            : 1L;
+
+        Date now = new Date();
+        creditenhanceVo.setVersionnum(versionNum);
+        creditenhanceVo.setCreatetimestamp(now);
+        creditenhanceVo.setUpdatetimestamp(now);
+        this.creditenhanceService.insert((CreditenhanceEntity)creditenhanceVo);
+        return R.ok().put("creditenhanceInfo", (Object)creditenhanceVo);
     }
 
     @SysLog(value="\u66f4\u65b0")
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:creditenhance:update"})
-    public R update(@RequestBody CreditenhanceEntity creditenhanceEntity) {
-        this.creditenhanceService.updateById(creditenhanceEntity);
-        return R.ok();
+    public R update(@RequestBody CreditenhanceVo creditenhanceVo) {
+        Date now = new Date();
+        ProductEntity productEntity = this.productService.getInfoById(creditenhanceVo.getProductid());
+        long versionNum = (productEntity != null && productEntity.getCreditenhanceversion() != null
+            ? productEntity.getCreditenhanceversion()
+            : creditenhanceVo.getVersionnum()) + 1L;
+
+        creditenhanceVo.setId(null);
+        creditenhanceVo.setVersionnum(versionNum);
+        creditenhanceVo.setCreatetimestamp(now);
+        creditenhanceVo.setUpdatetimestamp(now);
+        this.creditenhanceService.insert((CreditenhanceEntity)creditenhanceVo);
+
+        productEntity.setCreditenhanceversion(versionNum);
+        productEntity.setUpdatetimestamp(now);
+        this.productService.updateById(productEntity);
+
+        return R.ok().put("creditenhanceInfo", (Object)creditenhanceVo);
     }
 
     @SysLog(value="\u5220\u9664")
@@ -146,4 +163,3 @@ extends AbstractController {
         return list;
     }
 }
-

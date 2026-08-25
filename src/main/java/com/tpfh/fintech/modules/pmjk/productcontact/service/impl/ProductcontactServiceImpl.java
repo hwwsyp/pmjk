@@ -27,6 +27,7 @@ public class ProductcontactServiceImpl
 extends ServiceImpl<ProductcontactDao, ProductcontactEntity>
 implements ProductcontactService {
     private static final String RELEASEINFO_SOURCE_NAME = "PMJKRELEASEINFO";
+    private static final String INSTITUTIONSRELA_SOURCE_NAME = "PMJKINSTITUTIONSRELA";
 
     @Autowired
     private ProductcontactDao productcontactDao;
@@ -59,12 +60,31 @@ implements ProductcontactService {
 
     @Override
     public void syncReleaseinfoContacts(Long releaseinfoId, List<Long> contactIds) {
-        if (releaseinfoId == null) {
+        this.syncContacts(releaseinfoId, RELEASEINFO_SOURCE_NAME, contactIds);
+    }
+
+    @Override
+    public List<Long> getContactIdsByReleaseinfoId(Long releaseinfoId) {
+        return this.getContactIdsBySource(releaseinfoId, RELEASEINFO_SOURCE_NAME);
+    }
+
+    @Override
+    public void syncInstitutionsrelaContacts(Long institutionsrelaId, List<Long> contactIds) {
+        this.syncContacts(institutionsrelaId, INSTITUTIONSRELA_SOURCE_NAME, contactIds);
+    }
+
+    @Override
+    public List<Long> getContactIdsByInstitutionsrelaId(Long institutionsrelaId) {
+        return this.getContactIdsBySource(institutionsrelaId, INSTITUTIONSRELA_SOURCE_NAME);
+    }
+
+    private void syncContacts(Long sourceId, String sourceName, List<Long> contactIds) {
+        if (sourceId == null) {
             return;
         }
         HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("sourceid", releaseinfoId);
-        params.put("sourcename", RELEASEINFO_SOURCE_NAME);
+        params.put("sourceid", sourceId);
+        params.put("sourcename", sourceName);
         List<ProductcontactEntity> existingList = this.getInfoList(params);
         if (existingList != null && !existingList.isEmpty()) {
             ArrayList<Long> removeIds = new ArrayList<Long>();
@@ -82,21 +102,20 @@ implements ProductcontactService {
             }
             ProductcontactEntity entity = new ProductcontactEntity();
             entity.setContactid(contactId);
-            entity.setSourceid(releaseinfoId);
-            entity.setSourcename(RELEASEINFO_SOURCE_NAME);
+            entity.setSourceid(sourceId);
+            entity.setSourcename(sourceName);
             this.insert(entity);
         }
     }
 
-    @Override
-    public List<Long> getContactIdsByReleaseinfoId(Long releaseinfoId) {
+    private List<Long> getContactIdsBySource(Long sourceId, String sourceName) {
         ArrayList<Long> contactIds = new ArrayList<Long>();
-        if (releaseinfoId == null) {
+        if (sourceId == null) {
             return contactIds;
         }
         HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("sourceid", releaseinfoId);
-        params.put("sourcename", RELEASEINFO_SOURCE_NAME);
+        params.put("sourceid", sourceId);
+        params.put("sourcename", sourceName);
         List<ProductcontactEntity> list = this.getInfoList(params);
         if (list == null || list.isEmpty()) {
             return contactIds;

@@ -7,6 +7,7 @@
 package com.tpfh.fintech.modules.pmjk.creditenhance.entity;
 
 import com.baomidou.mybatisplus.annotations.TableName;
+import java.util.Date;
 
 @TableName(value="pmjk_creditenhance")
 public class CreditenhanceEntity {
@@ -17,6 +18,9 @@ public class CreditenhanceEntity {
     private String description;
     private String juniortypedesc;
     private String othertypedesc;
+    private Date createtimestamp;
+    private Date updatetimestamp;
+    private String islock;
 
     public Long getProductid() {
         return this.productid;
@@ -72,6 +76,30 @@ public class CreditenhanceEntity {
 
     public void setOthertypedesc(String othertypedesc) {
         this.othertypedesc = othertypedesc;
+    }
+
+    public Date getCreatetimestamp() {
+        return this.createtimestamp;
+    }
+
+    public Date getUpdatetimestamp() {
+        return this.updatetimestamp;
+    }
+
+    public String getIslock() {
+        return this.islock;
+    }
+
+    public void setCreatetimestamp(Date createtimestamp) {
+        this.createtimestamp = createtimestamp;
+    }
+
+    public void setUpdatetimestamp(Date updatetimestamp) {
+        this.updatetimestamp = updatetimestamp;
+    }
+
+    public void setIslock(String islock) {
+        this.islock = islock;
     }
 
     public boolean equals(Object o) {
