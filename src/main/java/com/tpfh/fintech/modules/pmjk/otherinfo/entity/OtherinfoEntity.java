@@ -7,6 +7,7 @@
 package com.tpfh.fintech.modules.pmjk.otherinfo.entity;
 
 import com.baomidou.mybatisplus.annotations.TableName;
+import java.util.Date;
 
 @TableName(value="pmjk_otherinfo")
 public class OtherinfoEntity {
@@ -23,6 +24,9 @@ public class OtherinfoEntity {
     private String remark;
     private Long versionnum;
     private Long productid;
+    private Date createtimestamp;
+    private Date updatetimestamp;
+    private String islock;
 
     public Long getId() {
         return this.id;
@@ -76,6 +80,18 @@ public class OtherinfoEntity {
         return this.productid;
     }
 
+    public Date getCreatetimestamp() {
+        return this.createtimestamp;
+    }
+
+    public Date getUpdatetimestamp() {
+        return this.updatetimestamp;
+    }
+
+    public String getIslock() {
+        return this.islock;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -126,6 +142,18 @@ public class OtherinfoEntity {
 
     public void setProductid(Long productid) {
         this.productid = productid;
+    }
+
+    public void setCreatetimestamp(Date createtimestamp) {
+        this.createtimestamp = createtimestamp;
+    }
+
+    public void setUpdatetimestamp(Date updatetimestamp) {
+        this.updatetimestamp = updatetimestamp;
+    }
+
+    public void setIslock(String islock) {
+        this.islock = islock;
     }
 
     public boolean equals(Object o) {

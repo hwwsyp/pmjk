@@ -1,19 +1,5 @@
 /*
  * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  com.alibaba.fastjson2.JSONObject
- *  org.apache.shiro.authz.annotation.RequiresPermissions
- *  org.springframework.beans.factory.annotation.Autowired
- *  org.springframework.beans.factory.annotation.Value
- *  org.springframework.web.bind.annotation.GetMapping
- *  org.springframework.web.bind.annotation.PathVariable
- *  org.springframework.web.bind.annotation.PostMapping
- *  org.springframework.web.bind.annotation.RequestBody
- *  org.springframework.web.bind.annotation.RequestMapping
- *  org.springframework.web.bind.annotation.RequestParam
- *  org.springframework.web.bind.annotation.RestController
- *  org.springframework.web.multipart.MultipartFile
  */
 package com.tpfh.fintech.modules.pmjk.otherinfo.controller;
 
@@ -24,6 +10,8 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.common.utils.R;
 import com.tpfh.fintech.modules.pmjk.otherinfo.entity.OtherinfoEntity;
 import com.tpfh.fintech.modules.pmjk.otherinfo.service.OtherinfoService;
+import com.tpfh.fintech.modules.pmjk.product.entity.ProductEntity;
+import com.tpfh.fintech.modules.pmjk.product.service.ProductService;
 import com.tpfh.fintech.modules.share.template.ExcelReadDataFromFileTemplate;
 import com.tpfh.fintech.modules.share.template.FileToClassMapping;
 import com.tpfh.fintech.modules.share.template.ReadDataFromFileTemplate;
@@ -55,6 +43,10 @@ public class OtherinfoController
 extends AbstractController {
     @Autowired
     private OtherinfoService otherinfoService;
+
+    @Autowired
+    private ProductService productService;
+
     @Value(value="${tpfh.filePath}")
     String filePath;
 
@@ -83,16 +75,40 @@ extends AbstractController {
     @PostMapping(value={"/save"})
     @RequiresPermissions(value={"pmjk:otherinfo:save"})
     public R add(@RequestBody OtherinfoEntity otherinfoEntity) {
+        ProductEntity productEntity = this.productService.getInfoById(otherinfoEntity.getProductid());
+        long versionNum = productEntity != null && productEntity.getOtherversion() != null
+            ? productEntity.getOtherversion()
+            : 1L;
+
+        Date now = new Date();
+        otherinfoEntity.setVersionnum(versionNum);
+        otherinfoEntity.setCreatetimestamp(now);
+        otherinfoEntity.setUpdatetimestamp(now);
         this.otherinfoService.insert(otherinfoEntity);
-        return R.ok();
+        return R.ok().put("otherinfoInfo", (Object)otherinfoEntity);
     }
 
     @SysLog(value="\u66f4\u65b0")
     @PostMapping(value={"/update"})
     @RequiresPermissions(value={"pmjk:otherinfo:update"})
     public R update(@RequestBody OtherinfoEntity otherinfoEntity) {
-        this.otherinfoService.updateById(otherinfoEntity);
-        return R.ok();
+        Date now = new Date();
+        ProductEntity productEntity = this.productService.getInfoById(otherinfoEntity.getProductid());
+        long versionNum = (productEntity != null && productEntity.getOtherversion() != null
+            ? productEntity.getOtherversion()
+            : otherinfoEntity.getVersionnum()) + 1L;
+
+        otherinfoEntity.setId(null);
+        otherinfoEntity.setVersionnum(versionNum);
+        otherinfoEntity.setCreatetimestamp(now);
+        otherinfoEntity.setUpdatetimestamp(now);
+        this.otherinfoService.insert(otherinfoEntity);
+
+        productEntity.setOtherversion(versionNum);
+        productEntity.setUpdatetimestamp(now);
+        this.productService.updateById(productEntity);
+
+        return R.ok().put("otherinfoInfo", (Object)otherinfoEntity);
     }
 
     @SysLog(value="\u5220\u9664")
@@ -146,4 +162,3 @@ extends AbstractController {
         return list;
     }
 }
-
