@@ -17,50 +17,55 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service(value = "portfolioStockService")
 public class PortfolioStockServiceImpl extends ServiceImpl<PortfolioStockDao, PortfolioStockEntity>
-        implements PortfolioStockService {
+implements PortfolioStockService {
 
-    @Autowired
-    private PortfolioStockDao portfolioStockDao;
+	@Autowired
+	private PortfolioStockDao portfolioStockDao;
 
-    @Autowired
-    private AiStockSourceService aiStockSourceService;
+	@Autowired
+	private AiStockSourceService aiStockSourceService;
 
-    @Override
-    public PageUtils queryPage(HashMap<String, Object> params) {
-        Page<PortfolioStockEntity> page = new Page<>();
-        Integer pageno = Integer.parseInt(params.get("page").toString());
-        Integer limit = Integer.parseInt(params.get("limit").toString());
-        page.setCurrent(pageno);
-        page.setSize(limit);
-        page.setRecords(this.portfolioStockDao.getPortfolioStockListForPage(page, params));
-        return new PageUtils(page);
-    }
+	@Override
+	public PageUtils queryPage(HashMap<String, Object> params) {
+		Page<PortfolioStockEntity> page = new Page<>();
+		Integer pageno = Integer.parseInt(params.get("page").toString());
+		Integer limit = Integer.parseInt(params.get("limit").toString());
+		page.setCurrent(pageno);
+		page.setSize(limit);
+		page.setRecords(this.portfolioStockDao.getPortfolioStockListForPage(page, params));
+		return new PageUtils(page);
+	}
 
-    @Override
-    public List<PortfolioStockEntity> getInfoList(HashMap<String, Object> params) {
-        return this.portfolioStockDao.getPortfolioStockList(params);
-    }
+	@Override
+	public List<PortfolioStockEntity> getInfoList(HashMap<String, Object> params) {
+		return this.portfolioStockDao.getPortfolioStockList(params);
+	}
 
-    @Override
-    public PortfolioStockEntity getInfoById(Long id) {
-        return this.portfolioStockDao.selectById(id);
-    }
+	@Override
+	public PortfolioStockEntity getInfoById(Long id) {
+		return this.portfolioStockDao.selectById(id);
+	}
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int syncFromSource(String stockDate) {
-        if (StringUtils.isBlank(stockDate)) {
-            throw new IllegalArgumentException("库存日期不能为空");
-        }
-        List<PortfolioStockEntity> sourceRows = this.aiStockSourceService.querySource(stockDate);
-        this.portfolioStockDao.deleteByStockDate(stockDate);
-        Date now = new Date();
-        for (PortfolioStockEntity row : sourceRows) {
-            row.setId(null);
-            row.setCreatetimestamp(now);
-            row.setUpdatetimestamp(now);
-            this.insert(row);
-        }
-        return sourceRows.size();
-    }
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public int syncFromSource(String stockDate) {
+		if (StringUtils.isBlank(stockDate)) {
+			throw new IllegalArgumentException("库存日期不能为空");
+		}
+		try {
+			List<PortfolioStockEntity> sourceRows = this.aiStockSourceService.querySource(stockDate);
+			this.portfolioStockDao.deleteByStockDate(stockDate);
+			Date now = new Date();
+			for (PortfolioStockEntity row : sourceRows) {
+				row.setId(null);
+				row.setCreatetimestamp(now);
+				row.setUpdatetimestamp(now);
+				this.insert(row);
+			}
+			return sourceRows.size();
+		}catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
 }
