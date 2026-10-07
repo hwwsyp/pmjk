@@ -12,60 +12,68 @@ import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service(value = "portfolioStockService")
 public class PortfolioStockServiceImpl extends ServiceImpl<PortfolioStockDao, PortfolioStockEntity>
-implements PortfolioStockService {
+        implements PortfolioStockService {
 
-	@Autowired
-	private PortfolioStockDao portfolioStockDao;
+    @Autowired
+    private PortfolioStockDao portfolioStockDao;
 
-	@Autowired
-	private AiStockSourceService aiStockSourceService;
+    @Autowired
+    private AiStockSourceService aiStockSourceService;
 
-	@Override
-	public PageUtils queryPage(HashMap<String, Object> params) {
-		Page<PortfolioStockEntity> page = new Page<>();
-		Integer pageno = Integer.parseInt(params.get("page").toString());
-		Integer limit = Integer.parseInt(params.get("limit").toString());
-		page.setCurrent(pageno);
-		page.setSize(limit);
-		page.setRecords(this.portfolioStockDao.getPortfolioStockListForPage(page, params));
-		return new PageUtils(page);
-	}
+    @Autowired
+    @Lazy
+    private PortfolioStockService portfolioStockService;
 
-	@Override
-	public List<PortfolioStockEntity> getInfoList(HashMap<String, Object> params) {
-		return this.portfolioStockDao.getPortfolioStockList(params);
-	}
+    @Override
+    public PageUtils queryPage(HashMap<String, Object> params) {
+        Page<PortfolioStockEntity> page = new Page<>();
+        Integer pageno = Integer.parseInt(params.get("page").toString());
+        Integer limit = Integer.parseInt(params.get("limit").toString());
+        page.setCurrent(pageno);
+        page.setSize(limit);
+        page.setRecords(this.portfolioStockDao.getPortfolioStockListForPage(page, params));
+        return new PageUtils(page);
+    }
 
-	@Override
-	public PortfolioStockEntity getInfoById(Long id) {
-		return this.portfolioStockDao.selectById(id);
-	}
+    @Override
+    public List<PortfolioStockEntity> getInfoList(HashMap<String, Object> params) {
+        return this.portfolioStockDao.getPortfolioStockList(params);
+    }
 
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public int syncFromSource(String stockDate) {
-		if (StringUtils.isBlank(stockDate)) {
-			throw new IllegalArgumentException("库存日期不能为空");
-		}
-		try {
-			List<PortfolioStockEntity> sourceRows = this.aiStockSourceService.querySource(stockDate);
-			this.portfolioStockDao.deleteByStockDate(stockDate);
-			Date now = new Date();
-			for (PortfolioStockEntity row : sourceRows) {
-				row.setId(null);
-				row.setCreatetimestamp(now);
-				row.setUpdatetimestamp(now);
-				this.insert(row);
-			}
-			return sourceRows.size();
-		}catch (Exception e) {
-			e.printStackTrace();
-			return 0;
-		}
-	}
+    @Override
+    public PortfolioStockEntity getInfoById(Long id) {
+        return this.portfolioStockDao.selectById(id);
+    }
+
+    /**
+     * 先无事务从 vas9 读源表，再单独事务写入 bbg，避免 @Transactional 绑定默认库连接导致切库失效。
+     */
+    @Override
+    public int syncFromSource(String stockDate) {
+        if (StringUtils.isBlank(stockDate)) {
+            throw new IllegalArgumentException("库存日期不能为空");
+        }
+        List<PortfolioStockEntity> sourceRows = this.aiStockSourceService.querySource(stockDate);
+        return this.portfolioStockService.persistSyncRows(stockDate, sourceRows);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int persistSyncRows(String stockDate, List<PortfolioStockEntity> sourceRows) {
+        this.portfolioStockDao.deleteByStockDate(stockDate);
+        Date now = new Date();
+        for (PortfolioStockEntity row : sourceRows) {
+            row.setId(null);
+            row.setCreatetimestamp(now);
+            row.setUpdatetimestamp(now);
+            this.insert(row);
+        }
+        return sourceRows.size();
+    }
 }

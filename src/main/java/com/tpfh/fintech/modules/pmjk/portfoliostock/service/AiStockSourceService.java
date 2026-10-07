@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface AiStockSourceService {
 
-    List<PortfolioStockEntity> querySource(String stockDate) throws Exception;
+    List<PortfolioStockEntity> querySource(String stockDate);
 }

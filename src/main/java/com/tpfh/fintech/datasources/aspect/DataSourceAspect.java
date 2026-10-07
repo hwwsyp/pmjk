@@ -60,7 +60,8 @@ implements Ordered {
     }
 
     public int getOrder() {
-        return 1;
+        // 须先于 @Transactional 执行，否则事务已绑定默认库连接后无法切换数据源
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 }
 

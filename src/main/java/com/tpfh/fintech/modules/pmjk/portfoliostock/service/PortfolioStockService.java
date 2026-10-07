@@ -15,4 +15,6 @@ public interface PortfolioStockService extends IService<PortfolioStockEntity> {
     PortfolioStockEntity getInfoById(Long id);
 
     int syncFromSource(String stockDate);
+
+    int persistSyncRows(String stockDate, List<PortfolioStockEntity> sourceRows);
 }
