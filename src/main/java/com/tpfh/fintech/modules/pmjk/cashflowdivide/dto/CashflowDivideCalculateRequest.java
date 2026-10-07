@@ -1,23 +1,20 @@
 package com.tpfh.fintech.modules.pmjk.cashflowdivide.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class CashflowDivideCalculateRequest {
-    /** 待分配方式：TOTAL 人工总额 / RATE 固定比例 / MIXED 混合 */
+    /** 待分配方式：TOTAL 人工总额 / RATE 统一固定比例 */
     private String allocateMode;
     private String stockDate;
     private String productShortName;
     private String secCode;
-    /** 人工输入的待分配资金总额（TOTAL、MIXED 时按库存占比分摊） */
+    /** 人工输入的待分配资金总额（TOTAL 时按库存占比分摊） */
     private BigDecimal totalAllocateAmount;
     private BigDecimal totalBankFee;
     /** 人工输入的待分担税费总额（按库存占比分摊，可为 0） */
     private BigDecimal totalTaxAmount;
-    /** 统一固定比例（小数），毛分配 = 库存数量 × ratio */
+    /** 统一固定比例（小数），毛分配 = 库存数量 × ratio（RATE 时使用） */
     private BigDecimal globalAllocateRatio;
-    /** 指定组合的固定比例 */
-    private List<PortRatioItem> portAllocateRatios;
     private String transferDate;
     private String tradeDate;
     private String cashAccount;
@@ -41,8 +38,6 @@ public class CashflowDivideCalculateRequest {
     public void setTotalTaxAmount(BigDecimal totalTaxAmount) { this.totalTaxAmount = totalTaxAmount; }
     public BigDecimal getGlobalAllocateRatio() { return globalAllocateRatio; }
     public void setGlobalAllocateRatio(BigDecimal globalAllocateRatio) { this.globalAllocateRatio = globalAllocateRatio; }
-    public List<PortRatioItem> getPortAllocateRatios() { return portAllocateRatios; }
-    public void setPortAllocateRatios(List<PortRatioItem> portAllocateRatios) { this.portAllocateRatios = portAllocateRatios; }
     public String getTransferDate() { return transferDate; }
     public void setTransferDate(String transferDate) { this.transferDate = transferDate; }
     public String getTradeDate() { return tradeDate; }

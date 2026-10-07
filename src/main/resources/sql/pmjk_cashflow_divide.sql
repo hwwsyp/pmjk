@@ -1,6 +1,6 @@
 -- 现金流分配：按组合库存拆分待分配资金，生成估值录入风格明细
 -- 业务库：Oracle（与 pmjk 其它表一致，连接 spring.datasource.druid.bbg）
--- 说明：组合固定比例(portAllocateRatios)仅参与计算，不落库；批次表保存计算参数快照
+-- 说明：待分配方式 TOTAL/RATE，批次表保存计算参数快照
 
 -- ========== Oracle ==========
 
@@ -31,9 +31,9 @@ COMMENT ON COLUMN pmjk_cashflow_divide_batch.stock_date IS '组合库存日期';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.product_short_name IS '产品简称(SM 代码)';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.sec_code IS '证券代码';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.sm_code IS 'SM 代码(同 product_short_name)';
-COMMENT ON COLUMN pmjk_cashflow_divide_batch.total_allocate_amount IS '人工输入待分配总额(TOTAL/MIXED 时使用)';
+COMMENT ON COLUMN pmjk_cashflow_divide_batch.total_allocate_amount IS '人工输入待分配总额(TOTAL 时使用)';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.total_bank_fee IS '银行手续费总额，按库存占比分摊';
-COMMENT ON COLUMN pmjk_cashflow_divide_batch.allocate_mode IS '待分配方式 TOTAL/RATE/MIXED';
+COMMENT ON COLUMN pmjk_cashflow_divide_batch.allocate_mode IS '待分配方式 TOTAL/RATE';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.total_tax_amount IS '人工输入待分担税费总额，按库存占比分摊';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.global_allocate_ratio IS '统一固定比例(小数)，毛分配=库存×比例(RATE 时使用)';
 COMMENT ON COLUMN pmjk_cashflow_divide_batch.transfer_date IS '调拨日期';

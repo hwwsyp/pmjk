@@ -5,7 +5,6 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dao.CashflowDivideBatchDao;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dao.CashflowDivideLineDao;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.CashflowDivideCalculateRequest;
-import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.PortRatioItem;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.entity.CashflowDivideBatchEntity;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.entity.CashflowDivideLineEntity;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.service.CashflowDivideService;
@@ -154,14 +153,11 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
                 throw new IllegalArgumentException("人工总额模式下待分配资金总额必须大于0");
             }
         } else if ("RATE".equals(allocateMode)) {
-            if (request.getGlobalAllocateRatio() == null
-                    && (request.getPortAllocateRatios() == null || request.getPortAllocateRatios().isEmpty())) {
-                throw new IllegalArgumentException("固定比例模式下请填写统一比例或组合比例");
+            if (request.getGlobalAllocateRatio() == null) {
+                throw new IllegalArgumentException("固定比例模式下请填写统一比例");
             }
-        } else if ("MIXED".equals(allocateMode)) {
-            if (request.getTotalAllocateAmount() == null || request.getTotalAllocateAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("混合模式下待分配资金总额必须大于0");
-            }
+        } else if (!"TOTAL".equals(allocateMode)) {
+            throw new IllegalArgumentException("待分配方式仅支持 TOTAL 或 RATE");
         }
     }
 
@@ -231,14 +227,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             totalStock = totalStock.add(v);
         }
 
-        Map<String, BigDecimal> portRatioMap = buildPortRatioMap(request);
         String allocateMode = normalizeAllocateMode(request.getAllocateMode());
-        BigDecimal unratedStock = BigDecimal.ZERO;
-        for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
-            if (!portRatioMap.containsKey(e.getKey())) {
-                unratedStock = unratedStock.add(e.getValue());
-            }
-        }
 
         List<PortAllocationVo> list = new ArrayList<PortAllocationVo>();
         BigDecimal totalAlloc = request.getTotalAllocateAmount() == null ? BigDecimal.ZERO : request.getTotalAllocateAmount();
@@ -247,8 +236,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
 
         for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
             BigDecimal ratio = e.getValue().divide(totalStock, 12, RoundingMode.HALF_UP);
-            BigDecimal gross = computePortGross(
-                    request, allocateMode, portRatioMap, e.getKey(), e.getValue(), ratio, totalAlloc, unratedStock);
+            BigDecimal gross = computePortGross(request, allocateMode, e.getValue(), ratio, totalAlloc);
             BigDecimal fee = totalFee.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             BigDecimal tax = totalTax.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             BigDecimal net = gross.subtract(fee).subtract(tax).setScale(2, RoundingMode.HALF_UP);
@@ -266,45 +254,18 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         return list;
     }
 
-    private Map<String, BigDecimal> buildPortRatioMap(CashflowDivideCalculateRequest request) {
-        Map<String, BigDecimal> map = new HashMap<String, BigDecimal>();
-        if (request.getPortAllocateRatios() == null) {
-            return map;
-        }
-        for (PortRatioItem item : request.getPortAllocateRatios()) {
-            if (item == null || StringUtils.isBlank(item.getPortCode()) || item.getRatio() == null) {
-                continue;
-            }
-            map.put(item.getPortCode().trim(), item.getRatio());
-        }
-        return map;
-    }
-
-    /** 待分配毛额：TOTAL 按库存占比分总额；RATE 为库存×比例；MIXED 为指定组合×比例 + 其余分总额 */
+    /** 待分配毛额：TOTAL 按库存占比分总额；RATE 为库存×统一比例 */
     private BigDecimal computePortGross(
             CashflowDivideCalculateRequest request,
             String allocateMode,
-            Map<String, BigDecimal> portRatioMap,
-            String portCode,
             BigDecimal stockAmount,
             BigDecimal stockRatio,
-            BigDecimal totalAllocateAmount,
-            BigDecimal unratedStock) {
-        if (portRatioMap.containsKey(portCode)) {
-            return stockAmount.multiply(portRatioMap.get(portCode)).setScale(2, RoundingMode.HALF_UP);
-        }
-        if ("RATE".equals(allocateMode) && request.getGlobalAllocateRatio() != null) {
+            BigDecimal totalAllocateAmount) {
+        if ("RATE".equals(allocateMode)) {
             return stockAmount.multiply(request.getGlobalAllocateRatio()).setScale(2, RoundingMode.HALF_UP);
         }
         if ("TOTAL".equals(allocateMode)) {
             return totalAllocateAmount.multiply(stockRatio).setScale(2, RoundingMode.HALF_UP);
-        }
-        if ("MIXED".equals(allocateMode)) {
-            if (unratedStock.compareTo(BigDecimal.ZERO) <= 0) {
-                return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-            }
-            BigDecimal unratedRatio = stockAmount.divide(unratedStock, 12, RoundingMode.HALF_UP);
-            return totalAllocateAmount.multiply(unratedRatio).setScale(2, RoundingMode.HALF_UP);
         }
         return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     }
