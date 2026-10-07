@@ -4,19 +4,20 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public class CashflowDivideCalculateRequest {
-    /** 税费方式：NONE / TOTAL / RATE / MIXED */
-    private String taxMode;
+    /** 待分配方式：TOTAL 人工总额 / RATE 固定比例 / MIXED 混合 */
+    private String allocateMode;
     private String stockDate;
     private String productShortName;
     private String secCode;
+    /** 人工输入的待分配资金总额（TOTAL、MIXED 时按库存占比分摊） */
     private BigDecimal totalAllocateAmount;
     private BigDecimal totalBankFee;
-    /** 待分担税费总额（TOTAL、MIXED 时使用，按库存占比分摊） */
+    /** 人工输入的待分担税费总额（按库存占比分摊，可为 0） */
     private BigDecimal totalTaxAmount;
-    /** 统一固定税率，小数，如 0.0264 */
-    private BigDecimal globalTaxRate;
-    /** 指定组合的固定税率 */
-    private List<PortTaxRateItem> portTaxRates;
+    /** 统一固定比例（小数），毛分配 = 库存数量 × ratio */
+    private BigDecimal globalAllocateRatio;
+    /** 指定组合的固定比例 */
+    private List<PortRatioItem> portAllocateRatios;
     private String transferDate;
     private String tradeDate;
     private String cashAccount;
@@ -24,8 +25,8 @@ public class CashflowDivideCalculateRequest {
     private String tptPortCode;
     private String investmentManager;
 
-    public String getTaxMode() { return taxMode; }
-    public void setTaxMode(String taxMode) { this.taxMode = taxMode; }
+    public String getAllocateMode() { return allocateMode; }
+    public void setAllocateMode(String allocateMode) { this.allocateMode = allocateMode; }
     public String getStockDate() { return stockDate; }
     public void setStockDate(String stockDate) { this.stockDate = stockDate; }
     public String getProductShortName() { return productShortName; }
@@ -38,10 +39,10 @@ public class CashflowDivideCalculateRequest {
     public void setTotalBankFee(BigDecimal totalBankFee) { this.totalBankFee = totalBankFee; }
     public BigDecimal getTotalTaxAmount() { return totalTaxAmount; }
     public void setTotalTaxAmount(BigDecimal totalTaxAmount) { this.totalTaxAmount = totalTaxAmount; }
-    public BigDecimal getGlobalTaxRate() { return globalTaxRate; }
-    public void setGlobalTaxRate(BigDecimal globalTaxRate) { this.globalTaxRate = globalTaxRate; }
-    public List<PortTaxRateItem> getPortTaxRates() { return portTaxRates; }
-    public void setPortTaxRates(List<PortTaxRateItem> portTaxRates) { this.portTaxRates = portTaxRates; }
+    public BigDecimal getGlobalAllocateRatio() { return globalAllocateRatio; }
+    public void setGlobalAllocateRatio(BigDecimal globalAllocateRatio) { this.globalAllocateRatio = globalAllocateRatio; }
+    public List<PortRatioItem> getPortAllocateRatios() { return portAllocateRatios; }
+    public void setPortAllocateRatios(List<PortRatioItem> portAllocateRatios) { this.portAllocateRatios = portAllocateRatios; }
     public String getTransferDate() { return transferDate; }
     public void setTransferDate(String transferDate) { this.transferDate = transferDate; }
     public String getTradeDate() { return tradeDate; }

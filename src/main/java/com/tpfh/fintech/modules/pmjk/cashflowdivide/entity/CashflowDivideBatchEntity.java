@@ -13,9 +13,9 @@ public class CashflowDivideBatchEntity {
     private String smCode;
     private BigDecimal totalAllocateAmount;
     private BigDecimal totalBankFee;
-    private String taxMode;
+    private String allocateMode;
     private BigDecimal totalTaxAmount;
-    private BigDecimal globalTaxRate;
+    private BigDecimal globalAllocateRatio;
     private Date transferDate;
     private Date tradeDate;
     private String cashAccount;
@@ -39,12 +39,12 @@ public class CashflowDivideBatchEntity {
     public void setTotalAllocateAmount(BigDecimal totalAllocateAmount) { this.totalAllocateAmount = totalAllocateAmount; }
     public BigDecimal getTotalBankFee() { return totalBankFee; }
     public void setTotalBankFee(BigDecimal totalBankFee) { this.totalBankFee = totalBankFee; }
-    public String getTaxMode() { return taxMode; }
-    public void setTaxMode(String taxMode) { this.taxMode = taxMode; }
+    public String getAllocateMode() { return allocateMode; }
+    public void setAllocateMode(String allocateMode) { this.allocateMode = allocateMode; }
     public BigDecimal getTotalTaxAmount() { return totalTaxAmount; }
     public void setTotalTaxAmount(BigDecimal totalTaxAmount) { this.totalTaxAmount = totalTaxAmount; }
-    public BigDecimal getGlobalTaxRate() { return globalTaxRate; }
-    public void setGlobalTaxRate(BigDecimal globalTaxRate) { this.globalTaxRate = globalTaxRate; }
+    public BigDecimal getGlobalAllocateRatio() { return globalAllocateRatio; }
+    public void setGlobalAllocateRatio(BigDecimal globalAllocateRatio) { this.globalAllocateRatio = globalAllocateRatio; }
     public Date getTransferDate() { return transferDate; }
     public void setTransferDate(Date transferDate) { this.transferDate = transferDate; }
     public Date getTradeDate() { return tradeDate; }

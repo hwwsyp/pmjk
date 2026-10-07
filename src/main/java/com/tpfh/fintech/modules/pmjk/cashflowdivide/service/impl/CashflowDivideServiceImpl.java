@@ -5,7 +5,7 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dao.CashflowDivideBatchDao;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dao.CashflowDivideLineDao;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.CashflowDivideCalculateRequest;
-import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.PortTaxRateItem;
+import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.PortRatioItem;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.entity.CashflowDivideBatchEntity;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.entity.CashflowDivideLineEntity;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.service.CashflowDivideService;
@@ -95,9 +95,9 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         batch.setSmCode(request.getProductShortName());
         batch.setTotalAllocateAmount(request.getTotalAllocateAmount());
         batch.setTotalBankFee(request.getTotalBankFee());
-        batch.setTaxMode(normalizeTaxMode(request.getTaxMode()));
+        batch.setAllocateMode(normalizeAllocateMode(request.getAllocateMode()));
         batch.setTotalTaxAmount(request.getTotalTaxAmount());
-        batch.setGlobalTaxRate(request.getGlobalTaxRate());
+        batch.setGlobalAllocateRatio(request.getGlobalAllocateRatio());
         batch.setTransferDate(parseDate(request.getTransferDate(), "调拨日期"));
         batch.setTradeDate(parseDate(request.getTradeDate(), "成交日期"));
         batch.setCashAccount(defaultIfBlank(request.getCashAccount(), "BOCHK-MK-USD-SA"));
@@ -135,33 +135,33 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         if (StringUtils.isBlank(request.getStockDate())) {
             throw new IllegalArgumentException("库存日期不能为空");
         }
-        if (request.getTotalAllocateAmount() == null || request.getTotalAllocateAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("待分配资金总额必须大于0");
-        }
         if (request.getTotalBankFee() == null) {
             request.setTotalBankFee(BigDecimal.ZERO);
         }
         if (request.getTotalBankFee().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("银行手续费总额不能为负数");
         }
-        String taxMode = normalizeTaxMode(request.getTaxMode());
-        request.setTaxMode(taxMode);
-        if ("TOTAL".equals(taxMode)) {
-            if (request.getTotalTaxAmount() == null || request.getTotalTaxAmount().compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("税费总额分摊模式下请填写待分担税费总额");
-            }
-        } else if ("RATE".equals(taxMode)) {
-            if (request.getGlobalTaxRate() == null
-                    && (request.getPortTaxRates() == null || request.getPortTaxRates().isEmpty())) {
-                throw new IllegalArgumentException("固定税率模式下请填写统一税率或组合税率");
-            }
-        } else if ("MIXED".equals(taxMode)) {
-            if (request.getTotalTaxAmount() == null || request.getTotalTaxAmount().compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("混合模式下请填写待分担税费总额");
-            }
-        }
         if (request.getTotalTaxAmount() == null) {
             request.setTotalTaxAmount(BigDecimal.ZERO);
+        }
+        if (request.getTotalTaxAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("待分担税费总额不能为负数");
+        }
+        String allocateMode = normalizeAllocateMode(request.getAllocateMode());
+        request.setAllocateMode(allocateMode);
+        if ("TOTAL".equals(allocateMode)) {
+            if (request.getTotalAllocateAmount() == null || request.getTotalAllocateAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("人工总额模式下待分配资金总额必须大于0");
+            }
+        } else if ("RATE".equals(allocateMode)) {
+            if (request.getGlobalAllocateRatio() == null
+                    && (request.getPortAllocateRatios() == null || request.getPortAllocateRatios().isEmpty())) {
+                throw new IllegalArgumentException("固定比例模式下请填写统一比例或组合比例");
+            }
+        } else if ("MIXED".equals(allocateMode)) {
+            if (request.getTotalAllocateAmount() == null || request.getTotalAllocateAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("混合模式下待分配资金总额必须大于0");
+            }
         }
     }
 
@@ -231,24 +231,26 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             totalStock = totalStock.add(v);
         }
 
-        Map<String, BigDecimal> portRateMap = buildPortTaxRateMap(request);
-        String taxMode = normalizeTaxMode(request.getTaxMode());
+        Map<String, BigDecimal> portRatioMap = buildPortRatioMap(request);
+        String allocateMode = normalizeAllocateMode(request.getAllocateMode());
         BigDecimal unratedStock = BigDecimal.ZERO;
         for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
-            if (!portRateMap.containsKey(e.getKey())) {
+            if (!portRatioMap.containsKey(e.getKey())) {
                 unratedStock = unratedStock.add(e.getValue());
             }
         }
 
         List<PortAllocationVo> list = new ArrayList<PortAllocationVo>();
-        BigDecimal totalAlloc = request.getTotalAllocateAmount();
+        BigDecimal totalAlloc = request.getTotalAllocateAmount() == null ? BigDecimal.ZERO : request.getTotalAllocateAmount();
         BigDecimal totalFee = request.getTotalBankFee();
+        BigDecimal totalTax = request.getTotalTaxAmount();
 
         for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
             BigDecimal ratio = e.getValue().divide(totalStock, 12, RoundingMode.HALF_UP);
-            BigDecimal gross = totalAlloc.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal gross = computePortGross(
+                    request, allocateMode, portRatioMap, e.getKey(), e.getValue(), ratio, totalAlloc, unratedStock);
             BigDecimal fee = totalFee.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal tax = computePortTax(request, taxMode, portRateMap, e.getKey(), e.getValue(), gross, ratio, unratedStock);
+            BigDecimal tax = totalTax.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             BigDecimal net = gross.subtract(fee).subtract(tax).setScale(2, RoundingMode.HALF_UP);
 
             PortAllocationVo vo = new PortAllocationVo();
@@ -264,56 +266,54 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         return list;
     }
 
-    private Map<String, BigDecimal> buildPortTaxRateMap(CashflowDivideCalculateRequest request) {
+    private Map<String, BigDecimal> buildPortRatioMap(CashflowDivideCalculateRequest request) {
         Map<String, BigDecimal> map = new HashMap<String, BigDecimal>();
-        if (request.getPortTaxRates() == null) {
+        if (request.getPortAllocateRatios() == null) {
             return map;
         }
-        for (PortTaxRateItem item : request.getPortTaxRates()) {
-            if (item == null || StringUtils.isBlank(item.getPortCode()) || item.getTaxRate() == null) {
+        for (PortRatioItem item : request.getPortAllocateRatios()) {
+            if (item == null || StringUtils.isBlank(item.getPortCode()) || item.getRatio() == null) {
                 continue;
             }
-            map.put(item.getPortCode().trim(), item.getTaxRate());
+            map.put(item.getPortCode().trim(), item.getRatio());
         }
         return map;
     }
 
-    private BigDecimal computePortTax(
+    /** 待分配毛额：TOTAL 按库存占比分总额；RATE 为库存×比例；MIXED 为指定组合×比例 + 其余分总额 */
+    private BigDecimal computePortGross(
             CashflowDivideCalculateRequest request,
-            String taxMode,
-            Map<String, BigDecimal> portRateMap,
+            String allocateMode,
+            Map<String, BigDecimal> portRatioMap,
             String portCode,
             BigDecimal stockAmount,
-            BigDecimal gross,
-            BigDecimal ratio,
+            BigDecimal stockRatio,
+            BigDecimal totalAllocateAmount,
             BigDecimal unratedStock) {
-        if ("NONE".equals(taxMode)) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        if (portRatioMap.containsKey(portCode)) {
+            return stockAmount.multiply(portRatioMap.get(portCode)).setScale(2, RoundingMode.HALF_UP);
         }
-        if (portRateMap.containsKey(portCode)) {
-            return gross.multiply(portRateMap.get(portCode)).setScale(2, RoundingMode.HALF_UP);
+        if ("RATE".equals(allocateMode) && request.getGlobalAllocateRatio() != null) {
+            return stockAmount.multiply(request.getGlobalAllocateRatio()).setScale(2, RoundingMode.HALF_UP);
         }
-        if ("RATE".equals(taxMode) && request.getGlobalTaxRate() != null) {
-            return gross.multiply(request.getGlobalTaxRate()).setScale(2, RoundingMode.HALF_UP);
+        if ("TOTAL".equals(allocateMode)) {
+            return totalAllocateAmount.multiply(stockRatio).setScale(2, RoundingMode.HALF_UP);
         }
-        if ("TOTAL".equals(taxMode)) {
-            return request.getTotalTaxAmount().multiply(ratio).setScale(2, RoundingMode.HALF_UP);
-        }
-        if ("MIXED".equals(taxMode)) {
+        if ("MIXED".equals(allocateMode)) {
             if (unratedStock.compareTo(BigDecimal.ZERO) <= 0) {
                 return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
             }
             BigDecimal unratedRatio = stockAmount.divide(unratedStock, 12, RoundingMode.HALF_UP);
-            return request.getTotalTaxAmount().multiply(unratedRatio).setScale(2, RoundingMode.HALF_UP);
+            return totalAllocateAmount.multiply(unratedRatio).setScale(2, RoundingMode.HALF_UP);
         }
         return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     }
 
-    private String normalizeTaxMode(String taxMode) {
-        if (StringUtils.isBlank(taxMode)) {
-            return "NONE";
+    private String normalizeAllocateMode(String allocateMode) {
+        if (StringUtils.isBlank(allocateMode)) {
+            return "TOTAL";
         }
-        return taxMode.trim().toUpperCase();
+        return allocateMode.trim().toUpperCase();
     }
 
     private List<CashflowDivideLineEntity> buildEntryLines(
