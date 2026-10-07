@@ -60,7 +60,8 @@
 		 
 		<where>
           	<if test="producttype != null and producttype != ''"> and lll.producttype=#{producttype}</if> 
-          	<if test="productname != null and productname != ''"> and lll.productname like  '%' || #{productname} || '%'</if> 
+          	<if test="productname != null and productname != ''"> and lll.productname like  '%' || #{productname} || '%'</if>
+          	<if test="productshortname != null and productshortname != ''"> and lll.productshortname = #{productshortname}</if>
 		</where>
 		order by lll.id desc
 	</select>
