@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.portfoliostock.dao.AiStockSourceDao">
+
+    <!-- 数据源：spring.datasource.druid.vas9（t_d_ai_stock） -->
+    <select id="selectAiStock" resultType="com.tpfh.fintech.modules.pmjk.portfoliostock.entity.PortfolioStockEntity">
+        select
+            c_port_code as portCode,
+            d_stock as stockDate,
+            c_sec_code as secCode,
+            c_dc_code as dcCode,
+            n_amount as amount,
+            c_km_code as kmCode,
+            c_km_name as kmName
+        from t_d_ai_stock
+        where d_stock = to_date(#{stockDate}, 'yyyy-mm-dd')
+          and length(c_port_code) &gt; 6
+          and c_km_code like '1111.99.01%'
+    </select>
+</mapper>

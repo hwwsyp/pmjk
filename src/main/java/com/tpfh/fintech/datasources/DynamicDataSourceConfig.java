@@ -34,11 +34,18 @@ public class DynamicDataSourceConfig {
     }
 
     @Bean
+    @ConfigurationProperties(value="spring.datasource.druid.vas9")
+    public DataSource vas9DataSource() {
+        return DruidDataSourceBuilder.create().build();
+    }
+
+    @Bean
     @Primary
-    public DynamicDataSource dataSource(DataSource bbgDataSource, DataSource thirdDataSource) {
+    public DynamicDataSource dataSource(DataSource bbgDataSource, DataSource thirdDataSource, DataSource vas9DataSource) {
         HashMap<Object, Object> targetDataSources = new HashMap<Object, Object>();
         targetDataSources.put("bbg", bbgDataSource);
         targetDataSources.put("third", thirdDataSource);
+        targetDataSources.put("vas9", vas9DataSource);
         return new DynamicDataSource(bbgDataSource, targetDataSources);
     }
 }

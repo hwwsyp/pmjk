@@ -6,5 +6,6 @@ package com.tpfh.fintech.datasources;
 public interface DataSourceNames {
     public static final String BBG = "bbg";
     public static final String THIRD = "third";
+    public static final String VAS9 = "vas9";
 }
 
