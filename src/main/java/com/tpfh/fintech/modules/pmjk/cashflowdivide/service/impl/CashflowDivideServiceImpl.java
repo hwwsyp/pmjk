@@ -5,6 +5,7 @@ import com.tpfh.fintech.common.utils.PageUtils;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dao.CashflowDivideBatchDao;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dao.CashflowDivideLineDao;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.CashflowDivideCalculateRequest;
+import com.tpfh.fintech.modules.pmjk.cashflowdivide.dto.PortTaxRateItem;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.entity.CashflowDivideBatchEntity;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.entity.CashflowDivideLineEntity;
 import com.tpfh.fintech.modules.pmjk.cashflowdivide.service.CashflowDivideService;
@@ -94,6 +95,9 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         batch.setSmCode(request.getProductShortName());
         batch.setTotalAllocateAmount(request.getTotalAllocateAmount());
         batch.setTotalBankFee(request.getTotalBankFee());
+        batch.setTaxMode(normalizeTaxMode(request.getTaxMode()));
+        batch.setTotalTaxAmount(request.getTotalTaxAmount());
+        batch.setGlobalTaxRate(request.getGlobalTaxRate());
         batch.setTransferDate(parseDate(request.getTransferDate(), "调拨日期"));
         batch.setTradeDate(parseDate(request.getTradeDate(), "成交日期"));
         batch.setCashAccount(defaultIfBlank(request.getCashAccount(), "BOCHK-MK-USD-SA"));
@@ -139,6 +143,25 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         }
         if (request.getTotalBankFee().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("银行手续费总额不能为负数");
+        }
+        String taxMode = normalizeTaxMode(request.getTaxMode());
+        request.setTaxMode(taxMode);
+        if ("TOTAL".equals(taxMode)) {
+            if (request.getTotalTaxAmount() == null || request.getTotalTaxAmount().compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("税费总额分摊模式下请填写待分担税费总额");
+            }
+        } else if ("RATE".equals(taxMode)) {
+            if (request.getGlobalTaxRate() == null
+                    && (request.getPortTaxRates() == null || request.getPortTaxRates().isEmpty())) {
+                throw new IllegalArgumentException("固定税率模式下请填写统一税率或组合税率");
+            }
+        } else if ("MIXED".equals(taxMode)) {
+            if (request.getTotalTaxAmount() == null || request.getTotalTaxAmount().compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("混合模式下请填写待分担税费总额");
+            }
+        }
+        if (request.getTotalTaxAmount() == null) {
+            request.setTotalTaxAmount(BigDecimal.ZERO);
         }
     }
 
@@ -208,6 +231,15 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             totalStock = totalStock.add(v);
         }
 
+        Map<String, BigDecimal> portRateMap = buildPortTaxRateMap(request);
+        String taxMode = normalizeTaxMode(request.getTaxMode());
+        BigDecimal unratedStock = BigDecimal.ZERO;
+        for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
+            if (!portRateMap.containsKey(e.getKey())) {
+                unratedStock = unratedStock.add(e.getValue());
+            }
+        }
+
         List<PortAllocationVo> list = new ArrayList<PortAllocationVo>();
         BigDecimal totalAlloc = request.getTotalAllocateAmount();
         BigDecimal totalFee = request.getTotalBankFee();
@@ -216,7 +248,8 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             BigDecimal ratio = e.getValue().divide(totalStock, 12, RoundingMode.HALF_UP);
             BigDecimal gross = totalAlloc.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             BigDecimal fee = totalFee.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal net = gross.subtract(fee).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal tax = computePortTax(request, taxMode, portRateMap, e.getKey(), e.getValue(), gross, ratio, unratedStock);
+            BigDecimal net = gross.subtract(fee).subtract(tax).setScale(2, RoundingMode.HALF_UP);
 
             PortAllocationVo vo = new PortAllocationVo();
             vo.setPortCode(e.getKey());
@@ -224,10 +257,63 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             vo.setRatio(ratio);
             vo.setGrossAllocate(gross);
             vo.setBankFee(fee);
+            vo.setTaxAmount(tax);
             vo.setNetAmount(net);
             list.add(vo);
         }
         return list;
+    }
+
+    private Map<String, BigDecimal> buildPortTaxRateMap(CashflowDivideCalculateRequest request) {
+        Map<String, BigDecimal> map = new HashMap<String, BigDecimal>();
+        if (request.getPortTaxRates() == null) {
+            return map;
+        }
+        for (PortTaxRateItem item : request.getPortTaxRates()) {
+            if (item == null || StringUtils.isBlank(item.getPortCode()) || item.getTaxRate() == null) {
+                continue;
+            }
+            map.put(item.getPortCode().trim(), item.getTaxRate());
+        }
+        return map;
+    }
+
+    private BigDecimal computePortTax(
+            CashflowDivideCalculateRequest request,
+            String taxMode,
+            Map<String, BigDecimal> portRateMap,
+            String portCode,
+            BigDecimal stockAmount,
+            BigDecimal gross,
+            BigDecimal ratio,
+            BigDecimal unratedStock) {
+        if ("NONE".equals(taxMode)) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        if (portRateMap.containsKey(portCode)) {
+            return gross.multiply(portRateMap.get(portCode)).setScale(2, RoundingMode.HALF_UP);
+        }
+        if ("RATE".equals(taxMode) && request.getGlobalTaxRate() != null) {
+            return gross.multiply(request.getGlobalTaxRate()).setScale(2, RoundingMode.HALF_UP);
+        }
+        if ("TOTAL".equals(taxMode)) {
+            return request.getTotalTaxAmount().multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+        }
+        if ("MIXED".equals(taxMode)) {
+            if (unratedStock.compareTo(BigDecimal.ZERO) <= 0) {
+                return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            }
+            BigDecimal unratedRatio = stockAmount.divide(unratedStock, 12, RoundingMode.HALF_UP);
+            return request.getTotalTaxAmount().multiply(unratedRatio).setScale(2, RoundingMode.HALF_UP);
+        }
+        return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String normalizeTaxMode(String taxMode) {
+        if (StringUtils.isBlank(taxMode)) {
+            return "NONE";
+        }
+        return taxMode.trim().toUpperCase();
     }
 
     private List<CashflowDivideLineEntity> buildEntryLines(
@@ -253,10 +339,16 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             String port = p.getPortCode();
             BigDecimal net = p.getNetAmount();
             BigDecimal fee = p.getBankFee();
+            BigDecimal tax = p.getTaxAmount() == null ? BigDecimal.ZERO : p.getTaxAmount();
             String tptDesc = descPrefix + " - TPT to " + port;
 
             addTptPair(lines, "04", "", transferDate, tradeDate, "流出", tptPortCode, cashAccount, investmentManager,
                     secCode, net, "", tptDesc);
+
+            if (tax.compareTo(BigDecimal.ZERO) > 0) {
+                addPortPair(lines, "03", "QTFY", transferDate, tradeDate, "流出", port, cashAccount, investmentManager,
+                        secCode, tax, "QTL_SF", "Non-resident Alien Tax - " + descPrefix);
+            }
 
             addPortPair(lines, "03", "BKC", transferDate, tradeDate, "流出", port, cashAccount, investmentManager,
                     secCode, fee, "", "Bank Charge - " + descPrefix);

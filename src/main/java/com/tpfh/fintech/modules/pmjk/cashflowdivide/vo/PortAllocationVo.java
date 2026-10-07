@@ -8,6 +8,7 @@ public class PortAllocationVo {
     private BigDecimal ratio;
     private BigDecimal grossAllocate;
     private BigDecimal bankFee;
+    private BigDecimal taxAmount;
     private BigDecimal netAmount;
 
     public String getPortCode() { return portCode; }
@@ -20,6 +21,8 @@ public class PortAllocationVo {
     public void setGrossAllocate(BigDecimal grossAllocate) { this.grossAllocate = grossAllocate; }
     public BigDecimal getBankFee() { return bankFee; }
     public void setBankFee(BigDecimal bankFee) { this.bankFee = bankFee; }
+    public BigDecimal getTaxAmount() { return taxAmount; }
+    public void setTaxAmount(BigDecimal taxAmount) { this.taxAmount = taxAmount; }
     public BigDecimal getNetAmount() { return netAmount; }
     public void setNetAmount(BigDecimal netAmount) { this.netAmount = netAmount; }
 }
