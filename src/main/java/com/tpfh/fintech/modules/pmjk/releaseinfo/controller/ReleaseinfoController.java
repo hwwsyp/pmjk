@@ -129,7 +129,7 @@ extends AbstractController {
         productEntity.setReleaseversion(versionNum);
         productEntity.setUpdatetimestamp(now);
         this.productService.updateById(productEntity);
-
+        
         this.productcontactService.syncReleaseinfoContacts(releaseinfoVo.getId(), releaseinfoVo.getContactIds());
         releaseinfoVo.setContactIds(this.productcontactService.getContactIdsByReleaseinfoId(releaseinfoVo.getId()));
 

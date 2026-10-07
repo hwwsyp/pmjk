@@ -131,6 +131,20 @@ spring:
                    config:
                       decrypt: true
                       decrypt.key: MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALKuaQTTSiadDYlZ6Yp3t3yDffrNZEE82fEDCZeo/7QwhWOhlpRR6s7ayjl1gPeEEbYNMALkpn6y4cyIVIRbN/0CAwEAAQ==
+                      
+            vas9:
+                type: com.alibaba.druid.pool.DruidDataSource
+                driverClassName: oracle.jdbc.driver.OracleDriver
+                url: jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = 10.248.9.89)(PORT = 1521))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = TPJKDB)))
+                username: tpjk_uat
+                #利用druid的jar包对密码明文加密
+                #C:\Users\vhww\.m2\repository\com\alibaba\druid\1.1.10>java -cp druid-1.1.10.jar com.alibaba.druid.filter.config.ConfigTools root
+                password: g2oHPQRdIPTOjzu9hcyAcyFDQARfX+3jf76+kCHlJxs2Uut6v1XrYVR9SbnN6+1kChmgnAbZbQbyuAJajCwuUA==
+                #配置解密启动及公钥
+                connect-properties:
+                   config:
+                      decrypt: true
+                      decrypt.key: MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIX+NiR0ZGMoTzEYIdNAeNzBvwDERGQ3W6Qp2Z0W/uoIGawHICiAdvfznzXdKR+1AbCBAs3gr1PizzH7gSrT4m8CAwEAAQ==
             
             third:
                 type: com.alibaba.druid.pool.DruidDataSource
