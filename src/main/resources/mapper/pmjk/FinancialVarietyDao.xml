@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.financialvariety.dao.FinancialVarietyDao">
+
+    <sql id="allColumns">
+        id, sec_code, sec_mkt_code, sec_isin_code, sm_code, sec_name,
+        dc_code, sec_var_code, mkt_code, createtimestamp, updatetimestamp, islock
+    </sql>
+
+    <sql id="listWhere">
+        <where>
+            <if test="secCode != null and secCode != ''"> and sec_code like '%' || #{secCode} || '%'</if>
+            <if test="smCode != null and smCode != ''"> and sm_code like '%' || #{smCode} || '%'</if>
+            <if test="secName != null and secName != ''"> and sec_name like '%' || #{secName} || '%'</if>
+            <if test="secVarCode != null and secVarCode != ''"> and sec_var_code like #{secVarCode} || '%'</if>
+            <if test="mktCode != null and mktCode != ''"> and mkt_code = #{mktCode}</if>
+        </where>
+    </sql>
+
+    <select id="getFinancialVarietyListForPage" resultType="com.tpfh.fintech.modules.pmjk.financialvariety.entity.FinancialVarietyEntity">
+        select <include refid="allColumns"/> from pmjk_financial_variety
+        <include refid="listWhere"/>
+        order by sm_code, sec_code
+    </select>
+
+    <select id="getFinancialVarietyList" resultType="com.tpfh.fintech.modules.pmjk.financialvariety.entity.FinancialVarietyEntity">
+        select <include refid="allColumns"/> from pmjk_financial_variety
+        <include refid="listWhere"/>
+        order by sm_code, sec_code
+    </select>
+
+    <delete id="deleteAllSynced">
+        delete from pmjk_financial_variety
+    </delete>
+</mapper>

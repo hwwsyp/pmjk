@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tpfh.fintech.modules.pmjk.financialvariety.dao.SecBaseSourceDao">
+
+    <select id="selectSecBaseList" resultType="com.tpfh.fintech.modules.pmjk.financialvariety.entity.FinancialVarietyEntity">
+        select
+            c_sec_code as secCode,
+            c_sec_mkt_code as secMktCode,
+            c_sec_isin_code as secIsinCode,
+            c_sm_code as smCode,
+            c_sec_name as secName,
+            c_dc_code as dcCode,
+            c_sec_var_code as secVarCode,
+            c_mkt_code as mktCode
+        from t_p_sv_sec_base
+        where c_sec_var_code like 'JJ%'
+           or c_sec_var_code like 'LC%'
+    </select>
+</mapper>
