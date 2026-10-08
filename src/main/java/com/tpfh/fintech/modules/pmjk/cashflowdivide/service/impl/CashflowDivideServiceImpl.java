@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service(value = "cashflowDivideService")
 public class CashflowDivideServiceImpl implements CashflowDivideService {
 
-    private static final String MK_SUFFIX = "_MK_01";
     private static final int BIG_PORT_CODE_LEN = 6;
 
     @Autowired
@@ -288,45 +287,32 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             String investmentManager) {
 
         List<CashflowDivideLineEntity> lines = new ArrayList<CashflowDivideLineEntity>();
-        BigDecimal sumGross = BigDecimal.ZERO;
-        for (PortAllocationVo p : allocations) {
-            sumGross = sumGross.add(p.getGrossAllocate());
-        }
-
-        // 待分配总额：TPT 大/小组合各一笔流入
-        addBigSmallPair(lines, "04", "", transferDate, tradeDate, "流入", tptPortCode, cashAccount, investmentManager,
-                secCode, sumGross, "", descPrefix + " - Fund In");
 
         for (PortAllocationVo p : allocations) {
             String stockSmallPort = p.getPortCode();
-            BigDecimal gross = p.getGrossAllocate();
             BigDecimal net = p.getNetAmount();
             BigDecimal fee = p.getBankFee();
             BigDecimal tax = p.getTaxAmount() == null ? BigDecimal.ZERO : p.getTaxAmount();
-            String tptDesc = descPrefix + " - TPT to " + stockSmallPort;
 
-            // 按库存小组合笔数：自 TPT 大/小组合流出（大小各一笔）
-            addBigSmallPair(lines, "04", "", transferDate, tradeDate, "流出", tptPortCode, cashAccount, investmentManager,
-                    secCode, gross, "", tptDesc);
+            // 自库存小组合流出：手续费、税费(有则生成)、实收（大组合=左6位 + 库存小组合代码各一笔）
+            if (isPositiveAmount(fee)) {
+                addInventoryOutPair(lines, "03", "BKC", transferDate, tradeDate, stockSmallPort, cashAccount,
+                        investmentManager, secCode, fee, "", "Bank Charge - " + descPrefix);
+            }
 
-            // 自库存小组合流出：手续费、税费、实收（大组合=代码左6位 + 库存小组合代码）
-            addInventoryOutPair(lines, "03", "BKC", transferDate, tradeDate, stockSmallPort, cashAccount, investmentManager,
-                    secCode, fee, "", "Bank Charge - " + descPrefix);
-
-            if (tax.compareTo(BigDecimal.ZERO) > 0) {
+            if (isPositiveAmount(tax)) {
                 addInventoryOutPair(lines, "03", "QTFY", transferDate, tradeDate, stockSmallPort, cashAccount,
                         investmentManager, secCode, tax, "QTL_SF", "Non-resident Alien Tax - " + descPrefix);
             }
 
             addInventoryOutPair(lines, "04", "", transferDate, tradeDate, stockSmallPort, cashAccount, investmentManager,
                     secCode, net, "", descPrefix + " - Net to " + stockSmallPort);
-
-            // 库存大组合 + 对应 MK 小组合流入（如 102222 与 102222_MK_01）
-            String bigPort = resolveBigPortCode(stockSmallPort);
-            addBigSmallPair(lines, "04", "", transferDate, tradeDate, "流入", bigPort, cashAccount, investmentManager,
-                    secCode, net, "", descPrefix + " - MK Fund In");
         }
         return lines;
+    }
+
+    private boolean isPositiveAmount(BigDecimal amount) {
+        return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
     /** 大组合代码：库存小组合代码左侧 6 位 */
@@ -339,16 +325,6 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             return trimmed;
         }
         return trimmed.substring(0, BIG_PORT_CODE_LEN);
-    }
-
-    /** 通用大小组合：portCode 为大组合，portCode+_MK_01 为小组合 */
-    private void addBigSmallPair(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
-            Date transferDate, Date tradeDate, String flow, String bigPortCode, String cashAccount, String manager,
-            String secCode, BigDecimal amount, String feeChannel, String desc) {
-        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, bigPortCode, cashAccount, manager, secCode,
-                amount, feeChannel, desc);
-        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, bigPortCode + MK_SUFFIX, cashAccount,
-                manager, secCode, amount, feeChannel, desc);
     }
 
     /** 库存侧流出：大组合(左6位) + 库存小组合代码各一笔 */
