@@ -67,13 +67,14 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         String descPrefix = defaultIfBlank(request.getDescPrefix(), resolveProductName(request));
         String investmentManager = resolveInvestmentManager(request);
 
-        List<PortAllocationVo> allocations = buildAllocations(request, secCode);
+        AllocationBuildResult built = buildAllocations(request, secCode);
         List<CashflowDivideLineEntity> lines = buildEntryLines(
-                allocations, secCode, transferDate, tradeDate, cashAccount, tptPortCode, descPrefix, investmentManager);
+                built.allocations, secCode, transferDate, tradeDate, cashAccount, tptPortCode, descPrefix, investmentManager);
 
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("secCode", secCode);
-        result.put("allocations", allocations);
+        result.put("allocations", built.allocations);
+        result.put("allocateGrossTotal", built.allocateGrossTotal);
         result.put("lines", lines);
         return result;
     }
@@ -255,7 +256,17 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         return "";
     }
 
-    private List<PortAllocationVo> buildAllocations(CashflowDivideCalculateRequest request, String secCode) {
+    private static final class AllocationBuildResult {
+        private final List<PortAllocationVo> allocations;
+        private final BigDecimal allocateGrossTotal;
+
+        private AllocationBuildResult(List<PortAllocationVo> allocations, BigDecimal allocateGrossTotal) {
+            this.allocations = allocations;
+            this.allocateGrossTotal = allocateGrossTotal;
+        }
+    }
+
+    private AllocationBuildResult buildAllocations(CashflowDivideCalculateRequest request, String secCode) {
         HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("stockDate", request.getStockDate());
         params.put("secCode", secCode);
@@ -278,23 +289,33 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         }
 
         BigDecimal totalStock = BigDecimal.ZERO;
+        BigDecimal totalStockScaled = BigDecimal.ZERO;
         for (BigDecimal v : portSum.values()) {
             totalStock = totalStock.add(v);
+            totalStockScaled = totalStockScaled.add(scaleStock(v));
         }
 
         String allocateMode = normalizeAllocateMode(request.getAllocateMode());
+        String maxStockPortCode = resolveMaxStockPortCode(portSum);
 
         List<PortAllocationVo> list = new ArrayList<PortAllocationVo>();
         BigDecimal totalAlloc = request.getTotalAllocateAmount() == null ? BigDecimal.ZERO : request.getTotalAllocateAmount();
         BigDecimal totalFee = request.getTotalBankFee();
-        BigDecimal totalTax = request.getTotalTaxAmount();
+        BigDecimal totalTax = request.getTotalTaxAmount() == null ? BigDecimal.ZERO : request.getTotalTaxAmount();
+
+        BigDecimal allocateGrossTotal;
+        if ("RATE".equals(allocateMode)) {
+            allocateGrossTotal = totalStockScaled.multiply(request.getGlobalAllocateRatio())
+                    .setScale(2, RoundingMode.HALF_UP);
+        } else {
+            allocateGrossTotal = totalAlloc.setScale(2, RoundingMode.HALF_UP);
+        }
 
         for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
             BigDecimal ratio = e.getValue().divide(totalStock, 12, RoundingMode.HALF_UP);
             BigDecimal gross = computePortGross(request, allocateMode, e.getValue(), ratio, totalAlloc);
             BigDecimal fee = totalFee.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             BigDecimal tax = totalTax.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal net = gross.subtract(fee).subtract(tax).setScale(2, RoundingMode.HALF_UP);
 
             PortAllocationVo vo = new PortAllocationVo();
             vo.setPortCode(e.getKey());
@@ -303,10 +324,86 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             vo.setGrossAllocate(gross);
             vo.setBankFee(fee);
             vo.setTaxAmount(tax);
-            vo.setNetAmount(net);
             list.add(vo);
         }
-        return list;
+
+        applyTailToMaxStockPort(list, maxStockPortCode, allocateGrossTotal, AmountField.GROSS);
+        applyTailToMaxStockPort(list, maxStockPortCode, totalFee, AmountField.BANK_FEE);
+        applyTailToMaxStockPort(list, maxStockPortCode, totalTax, AmountField.TAX);
+        recalculateNetAmounts(list);
+
+        return new AllocationBuildResult(list, allocateGrossTotal);
+    }
+
+    private enum AmountField {
+        GROSS, BANK_FEE, TAX
+    }
+
+    private String resolveMaxStockPortCode(Map<String, BigDecimal> portSum) {
+        String maxPort = null;
+        BigDecimal maxStock = null;
+        for (Map.Entry<String, BigDecimal> e : portSum.entrySet()) {
+            if (maxStock == null || e.getValue().compareTo(maxStock) > 0) {
+                maxStock = e.getValue();
+                maxPort = e.getKey();
+            }
+        }
+        return maxPort;
+    }
+
+    /** 分摊舍入尾差：差额补到库存最大的组合 */
+    private void applyTailToMaxStockPort(
+            List<PortAllocationVo> list,
+            String maxStockPortCode,
+            BigDecimal targetTotal,
+            AmountField field) {
+        if (targetTotal == null || StringUtils.isBlank(maxStockPortCode) || list.isEmpty()) {
+            return;
+        }
+        BigDecimal expected = targetTotal.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal sum = BigDecimal.ZERO;
+        for (PortAllocationVo vo : list) {
+            sum = sum.add(readAmount(vo, field));
+        }
+        BigDecimal diff = expected.subtract(sum);
+        if (diff.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+        for (PortAllocationVo vo : list) {
+            if (maxStockPortCode.equals(vo.getPortCode())) {
+                writeAmount(vo, field, readAmount(vo, field).add(diff).setScale(2, RoundingMode.HALF_UP));
+                return;
+            }
+        }
+    }
+
+    private BigDecimal readAmount(PortAllocationVo vo, AmountField field) {
+        if (field == AmountField.GROSS) {
+            return vo.getGrossAllocate() == null ? BigDecimal.ZERO : vo.getGrossAllocate();
+        }
+        if (field == AmountField.BANK_FEE) {
+            return vo.getBankFee() == null ? BigDecimal.ZERO : vo.getBankFee();
+        }
+        return vo.getTaxAmount() == null ? BigDecimal.ZERO : vo.getTaxAmount();
+    }
+
+    private void writeAmount(PortAllocationVo vo, AmountField field, BigDecimal value) {
+        if (field == AmountField.GROSS) {
+            vo.setGrossAllocate(value);
+        } else if (field == AmountField.BANK_FEE) {
+            vo.setBankFee(value);
+        } else {
+            vo.setTaxAmount(value);
+        }
+    }
+
+    private void recalculateNetAmounts(List<PortAllocationVo> list) {
+        for (PortAllocationVo vo : list) {
+            BigDecimal gross = vo.getGrossAllocate() == null ? BigDecimal.ZERO : vo.getGrossAllocate();
+            BigDecimal fee = vo.getBankFee() == null ? BigDecimal.ZERO : vo.getBankFee();
+            BigDecimal tax = vo.getTaxAmount() == null ? BigDecimal.ZERO : vo.getTaxAmount();
+            vo.setNetAmount(gross.subtract(fee).subtract(tax).setScale(2, RoundingMode.HALF_UP));
+        }
     }
 
     /** 待分配毛额：TOTAL 按库存占比分总额；RATE 为库存×统一比例 */
@@ -317,7 +414,9 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             BigDecimal stockRatio,
             BigDecimal totalAllocateAmount) {
         if ("RATE".equals(allocateMode)) {
-            return stockAmount.multiply(request.getGlobalAllocateRatio()).setScale(2, RoundingMode.HALF_UP);
+            // 与页面库存一致：先保留 4 位小数再 × 比例，避免展示 810778.412 却用更长尾数算出 56835.56
+            BigDecimal stock = scaleStock(stockAmount);
+            return stock.multiply(request.getGlobalAllocateRatio()).setScale(2, RoundingMode.HALF_UP);
         }
         if ("TOTAL".equals(allocateMode)) {
             return totalAllocateAmount.multiply(stockRatio).setScale(2, RoundingMode.HALF_UP);
