@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CashflowDivideServiceImpl implements CashflowDivideService {
 
     private static final String MK_SUFFIX = "_MK_01";
-    private static final String AI_SUFFIX = "_AI_01";
+    private static final int BIG_PORT_CODE_LEN = 6;
 
     @Autowired
     private PortfolioStockService portfolioStockService;
@@ -288,58 +288,78 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             String investmentManager) {
 
         List<CashflowDivideLineEntity> lines = new ArrayList<CashflowDivideLineEntity>();
-        BigDecimal sumNet = BigDecimal.ZERO;
+        BigDecimal sumGross = BigDecimal.ZERO;
         for (PortAllocationVo p : allocations) {
-            sumNet = sumNet.add(p.getNetAmount());
+            sumGross = sumGross.add(p.getGrossAllocate());
         }
 
-        addTptPair(lines, "04", "", transferDate, tradeDate, "流入", tptPortCode, cashAccount, investmentManager,
-                secCode, sumNet, "", descPrefix + " - Fund In");
+        // 待分配总额：TPT 大/小组合各一笔流入
+        addBigSmallPair(lines, "04", "", transferDate, tradeDate, "流入", tptPortCode, cashAccount, investmentManager,
+                secCode, sumGross, "", descPrefix + " - Fund In");
 
         for (PortAllocationVo p : allocations) {
-            String port = p.getPortCode();
+            String stockSmallPort = p.getPortCode();
+            BigDecimal gross = p.getGrossAllocate();
             BigDecimal net = p.getNetAmount();
             BigDecimal fee = p.getBankFee();
             BigDecimal tax = p.getTaxAmount() == null ? BigDecimal.ZERO : p.getTaxAmount();
-            String tptDesc = descPrefix + " - TPT to " + port;
+            String tptDesc = descPrefix + " - TPT to " + stockSmallPort;
 
-            addTptPair(lines, "04", "", transferDate, tradeDate, "流出", tptPortCode, cashAccount, investmentManager,
-                    secCode, net, "", tptDesc);
+            // 按库存小组合笔数：自 TPT 大/小组合流出（大小各一笔）
+            addBigSmallPair(lines, "04", "", transferDate, tradeDate, "流出", tptPortCode, cashAccount, investmentManager,
+                    secCode, gross, "", tptDesc);
 
-            if (tax.compareTo(BigDecimal.ZERO) > 0) {
-                addPortPair(lines, "03", "QTFY", transferDate, tradeDate, "流出", port, cashAccount, investmentManager,
-                        secCode, tax, "QTL_SF", "Non-resident Alien Tax - " + descPrefix);
-            }
-
-            addPortPair(lines, "03", "BKC", transferDate, tradeDate, "流出", port, cashAccount, investmentManager,
+            // 自库存小组合流出：手续费、税费、实收（大组合=代码左6位 + 库存小组合代码）
+            addInventoryOutPair(lines, "03", "BKC", transferDate, tradeDate, stockSmallPort, cashAccount, investmentManager,
                     secCode, fee, "", "Bank Charge - " + descPrefix);
 
-            addAiMkLines(lines, transferDate, tradeDate, port, cashAccount, investmentManager, secCode, net, descPrefix);
+            if (tax.compareTo(BigDecimal.ZERO) > 0) {
+                addInventoryOutPair(lines, "03", "QTFY", transferDate, tradeDate, stockSmallPort, cashAccount,
+                        investmentManager, secCode, tax, "QTL_SF", "Non-resident Alien Tax - " + descPrefix);
+            }
+
+            addInventoryOutPair(lines, "04", "", transferDate, tradeDate, stockSmallPort, cashAccount, investmentManager,
+                    secCode, net, "", descPrefix + " - Net to " + stockSmallPort);
+
+            // 库存大组合 + 对应 MK 小组合流入（如 102222 与 102222_MK_01）
+            String bigPort = resolveBigPortCode(stockSmallPort);
+            addBigSmallPair(lines, "04", "", transferDate, tradeDate, "流入", bigPort, cashAccount, investmentManager,
+                    secCode, net, "", descPrefix + " - MK Fund In");
         }
         return lines;
     }
 
-    private void addTptPair(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
-            Date transferDate, Date tradeDate, String flow, String portCode, String cashAccount, String manager,
-            String secCode, BigDecimal amount, String feeChannel, String desc) {
-        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, portCode, cashAccount, manager, secCode, amount, feeChannel, desc);
-        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, portCode + MK_SUFFIX, cashAccount, manager, secCode, amount, feeChannel, desc);
+    /** 大组合代码：库存小组合代码左侧 6 位 */
+    private String resolveBigPortCode(String stockSmallPortCode) {
+        if (StringUtils.isBlank(stockSmallPortCode)) {
+            return "";
+        }
+        String trimmed = stockSmallPortCode.trim();
+        if (trimmed.length() <= BIG_PORT_CODE_LEN) {
+            return trimmed;
+        }
+        return trimmed.substring(0, BIG_PORT_CODE_LEN);
     }
 
-    private void addPortPair(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
-            Date transferDate, Date tradeDate, String flow, String portCode, String cashAccount, String manager,
+    /** 通用大小组合：portCode 为大组合，portCode+_MK_01 为小组合 */
+    private void addBigSmallPair(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
+            Date transferDate, Date tradeDate, String flow, String bigPortCode, String cashAccount, String manager,
             String secCode, BigDecimal amount, String feeChannel, String desc) {
-        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, portCode, cashAccount, manager, secCode, amount, feeChannel, desc);
-        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, portCode + AI_SUFFIX, cashAccount, manager, secCode, amount, feeChannel, desc);
+        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, bigPortCode, cashAccount, manager, secCode,
+                amount, feeChannel, desc);
+        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, flow, bigPortCode + MK_SUFFIX, cashAccount,
+                manager, secCode, amount, feeChannel, desc);
     }
 
-    private void addAiMkLines(List<CashflowDivideLineEntity> lines, Date transferDate, Date tradeDate, String portCode,
-            String cashAccount, String manager, String secCode, BigDecimal amount, String descPrefix) {
-        String desc = descPrefix + " - AI to MK";
-        addLine(lines, "04", "", transferDate, tradeDate, "流出", portCode, cashAccount, manager, secCode, amount, "", desc);
-        addLine(lines, "04", "", transferDate, tradeDate, "流出", portCode + AI_SUFFIX, cashAccount, manager, secCode, amount, "", desc);
-        addLine(lines, "04", "", transferDate, tradeDate, "流入", portCode, cashAccount, manager, secCode, amount, "", desc);
-        addLine(lines, "04", "", transferDate, tradeDate, "流入", portCode + MK_SUFFIX, cashAccount, manager, secCode, amount, "", desc);
+    /** 库存侧流出：大组合(左6位) + 库存小组合代码各一笔 */
+    private void addInventoryOutPair(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
+            Date transferDate, Date tradeDate, String stockSmallPortCode, String cashAccount, String manager,
+            String secCode, BigDecimal amount, String feeChannel, String desc) {
+        String bigPort = resolveBigPortCode(stockSmallPortCode);
+        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, "流出", bigPort, cashAccount, manager, secCode,
+                amount, feeChannel, desc);
+        addLine(lines, bizType, bizSubtype, transferDate, tradeDate, "流出", stockSmallPortCode, cashAccount, manager,
+                secCode, amount, feeChannel, desc);
     }
 
     private void addLine(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
