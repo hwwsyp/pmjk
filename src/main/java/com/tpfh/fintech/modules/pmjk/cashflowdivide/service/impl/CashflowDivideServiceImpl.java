@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CashflowDivideServiceImpl implements CashflowDivideService {
 
     private static final int BIG_PORT_CODE_LEN = 6;
+    private static final int STOCK_SCALE = 4;
 
     @Autowired
     private PortfolioStockService portfolioStockService;
@@ -242,7 +243,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
 
             PortAllocationVo vo = new PortAllocationVo();
             vo.setPortCode(e.getKey());
-            vo.setStockAmount(e.getValue());
+            vo.setStockAmount(scaleStock(e.getValue()));
             vo.setRatio(ratio);
             vo.setGrossAllocate(gross);
             vo.setBankFee(fee);
@@ -313,6 +314,13 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
 
     private boolean isPositiveAmount(BigDecimal amount) {
         return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private BigDecimal scaleStock(BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+        return value.setScale(STOCK_SCALE, RoundingMode.HALF_UP);
     }
 
     /** 大组合代码：库存小组合代码左侧 6 位 */
