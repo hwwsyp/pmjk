@@ -41,6 +41,13 @@ public class CashflowDivideController extends AbstractController {
         return R.ok().put("lines", lines);
     }
 
+    @GetMapping("/projectShortName")
+    @RequiresPermissions("pmjk:cashflowdivide:list")
+    public R projectShortName(@RequestParam("smCode") String smCode) {
+        String projectShortName = this.cashflowDivideService.resolveProjectShortNameBySmCode(smCode);
+        return R.ok().put("projectShortName", projectShortName);
+    }
+
     @PostMapping("/calculate")
     @RequiresPermissions("pmjk:cashflowdivide:calculate")
     public R calculate(@RequestBody CashflowDivideCalculateRequest request) {

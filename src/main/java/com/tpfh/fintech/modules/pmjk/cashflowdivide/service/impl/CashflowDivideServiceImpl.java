@@ -178,6 +178,13 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         return null;
     }
 
+    @Override
+    public String resolveProjectShortNameBySmCode(String smCode) {
+        CashflowDivideCalculateRequest request = new CashflowDivideCalculateRequest();
+        request.setProductShortName(smCode);
+        return resolveProjectShortName(request);
+    }
+
     /** 项目简称（pmjk 产品概要 productshortname），用于描述前缀默认值 */
     private String resolveProjectShortName(CashflowDivideCalculateRequest request) {
         String smCode = request.getProductShortName();

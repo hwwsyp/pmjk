@@ -19,4 +19,7 @@ public interface CashflowDivideService {
     CashflowDivideBatchEntity getBatchById(Long id);
 
     List<CashflowDivideLineEntity> getLinesByBatchId(Long batchId);
+
+    /** 按理财品种 SM 代码解析产品概要中的项目简称 */
+    String resolveProjectShortNameBySmCode(String smCode);
 }
