@@ -64,7 +64,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         Date tradeDate = parseDate(request.getTradeDate(), "成交日期");
         String cashAccount = defaultIfBlank(request.getCashAccount(), "BOCHK-MK-USD-SA");
         String tptPortCode = defaultIfBlank(request.getTptPortCode(), "000000");
-        String descPrefix = defaultIfBlank(request.getDescPrefix(), "现金分配");
+        String descPrefix = defaultIfBlank(request.getDescPrefix(), resolveProjectShortName(request));
         String investmentManager = resolveInvestmentManager(request);
 
         List<PortAllocationVo> allocations = buildAllocations(request, secCode);
@@ -100,7 +100,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         batch.setTransferDate(parseDate(request.getTransferDate(), "调拨日期"));
         batch.setTradeDate(parseDate(request.getTradeDate(), "成交日期"));
         batch.setCashAccount(defaultIfBlank(request.getCashAccount(), "BOCHK-MK-USD-SA"));
-        batch.setDescPrefix(defaultIfBlank(request.getDescPrefix(), "现金分配"));
+        batch.setDescPrefix(defaultIfBlank(request.getDescPrefix(), resolveProjectShortName(request)));
         batch.setTptPortCode(defaultIfBlank(request.getTptPortCode(), "000000"));
         batch.setInvestmentManager(resolveInvestmentManager(request));
         batch.setCreatetimestamp(now);
@@ -161,6 +161,57 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         }
     }
 
+    private FinancialVarietyEntity findVarietyBySmCode(String smCode) {
+        if (StringUtils.isBlank(smCode)) {
+            return null;
+        }
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("smCode", smCode);
+        List<FinancialVarietyEntity> list = this.financialVarietyService.getInfoList(params);
+        if (list != null) {
+            for (FinancialVarietyEntity item : list) {
+                if (smCode.equals(item.getSmCode())) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** 项目简称（pmjk 产品概要 productshortname），用于描述前缀默认值 */
+    private String resolveProjectShortName(CashflowDivideCalculateRequest request) {
+        String smCode = request.getProductShortName();
+        if (StringUtils.isBlank(smCode)) {
+            return "现金分配";
+        }
+        FinancialVarietyEntity variety = findVarietyBySmCode(smCode);
+        if (variety != null && StringUtils.isNotBlank(variety.getSecName())) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("page", 1);
+            params.put("limit", 5);
+            params.put("productname", variety.getSecName());
+            PageUtils page = this.productService.queryPage(params);
+            if (page != null && page.getList() != null && !page.getList().isEmpty()) {
+                ProductVo vo = (ProductVo) page.getList().get(0);
+                if (StringUtils.isNotBlank(vo.getProductshortname())) {
+                    return vo.getProductshortname();
+                }
+            }
+        }
+        HashMap<String, Object> byShort = new HashMap<String, Object>();
+        byShort.put("page", 1);
+        byShort.put("limit", 1);
+        byShort.put("productshortname", smCode);
+        PageUtils pageByShort = this.productService.queryPage(byShort);
+        if (pageByShort != null && pageByShort.getList() != null && !pageByShort.getList().isEmpty()) {
+            ProductVo vo = (ProductVo) pageByShort.getList().get(0);
+            if (StringUtils.isNotBlank(vo.getProductshortname())) {
+                return vo.getProductshortname();
+            }
+        }
+        return smCode;
+    }
+
     private String resolveSecCode(CashflowDivideCalculateRequest request) {
         if (StringUtils.isNotBlank(request.getSecCode())) {
             return request.getSecCode();
@@ -168,15 +219,9 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         if (StringUtils.isBlank(request.getProductShortName())) {
             throw new IllegalArgumentException("请填写产品简称或证券代码");
         }
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("smCode", request.getProductShortName());
-        List<FinancialVarietyEntity> list = this.financialVarietyService.getInfoList(params);
-        if (list != null) {
-            for (FinancialVarietyEntity item : list) {
-                if (request.getProductShortName().equals(item.getSmCode())) {
-                    return item.getSecCode();
-                }
-            }
+        FinancialVarietyEntity item = findVarietyBySmCode(request.getProductShortName());
+        if (item != null && StringUtils.isNotBlank(item.getSecCode())) {
+            return item.getSecCode();
         }
         throw new IllegalArgumentException("理财品种中未找到 SM 代码：" + request.getProductShortName());
     }
@@ -307,7 +352,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             }
 
             addInventoryOutPair(lines, "04", "", transferDate, tradeDate, stockSmallPort, cashAccount, investmentManager,
-                    secCode, net, "", descPrefix + " - Net to " + stockSmallPort);
+                    secCode, net, "", descPrefix + " - AI to MK");
         }
         return lines;
     }
