@@ -64,7 +64,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         Date tradeDate = parseDate(request.getTradeDate(), "成交日期");
         String cashAccount = defaultIfBlank(request.getCashAccount(), "BOCHK-MK-USD-SA");
         String tptPortCode = defaultIfBlank(request.getTptPortCode(), "000000");
-        String descPrefix = defaultIfBlank(request.getDescPrefix(), resolveProjectShortName(request));
+        String descPrefix = defaultIfBlank(request.getDescPrefix(), resolveProductName(request));
         String investmentManager = resolveInvestmentManager(request);
 
         List<PortAllocationVo> allocations = buildAllocations(request, secCode);
@@ -100,7 +100,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         batch.setTransferDate(parseDate(request.getTransferDate(), "调拨日期"));
         batch.setTradeDate(parseDate(request.getTradeDate(), "成交日期"));
         batch.setCashAccount(defaultIfBlank(request.getCashAccount(), "BOCHK-MK-USD-SA"));
-        batch.setDescPrefix(defaultIfBlank(request.getDescPrefix(), resolveProjectShortName(request)));
+        batch.setDescPrefix(defaultIfBlank(request.getDescPrefix(), resolveProductName(request)));
         batch.setTptPortCode(defaultIfBlank(request.getTptPortCode(), "000000"));
         batch.setInvestmentManager(resolveInvestmentManager(request));
         batch.setCreatetimestamp(now);
@@ -179,14 +179,14 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
     }
 
     @Override
-    public String resolveProjectShortNameBySmCode(String smCode) {
+    public String resolveProductNameBySmCode(String smCode) {
         CashflowDivideCalculateRequest request = new CashflowDivideCalculateRequest();
         request.setProductShortName(smCode);
-        return resolveProjectShortName(request);
+        return resolveProductName(request);
     }
 
-    /** 项目简称（pmjk 产品概要 productshortname），用于描述前缀默认值 */
-    private String resolveProjectShortName(CashflowDivideCalculateRequest request) {
+    /** 产品名称（pmjk 产品概要 productname），用于描述前缀默认值 */
+    private String resolveProductName(CashflowDivideCalculateRequest request) {
         String smCode = request.getProductShortName();
         if (StringUtils.isBlank(smCode)) {
             return "现金分配";
@@ -200,8 +200,8 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             PageUtils page = this.productService.queryPage(params);
             if (page != null && page.getList() != null && !page.getList().isEmpty()) {
                 ProductVo vo = (ProductVo) page.getList().get(0);
-                if (StringUtils.isNotBlank(vo.getProductshortname())) {
-                    return vo.getProductshortname();
+                if (StringUtils.isNotBlank(vo.getProductname())) {
+                    return vo.getProductname();
                 }
             }
         }
@@ -212,9 +212,12 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         PageUtils pageByShort = this.productService.queryPage(byShort);
         if (pageByShort != null && pageByShort.getList() != null && !pageByShort.getList().isEmpty()) {
             ProductVo vo = (ProductVo) pageByShort.getList().get(0);
-            if (StringUtils.isNotBlank(vo.getProductshortname())) {
-                return vo.getProductshortname();
+            if (StringUtils.isNotBlank(vo.getProductname())) {
+                return vo.getProductname();
             }
+        }
+        if (variety != null && StringUtils.isNotBlank(variety.getSecName())) {
+            return variety.getSecName();
         }
         return smCode;
     }
