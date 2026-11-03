@@ -1,5 +1,6 @@
 package com.tpfh.fintech.modules.pmjk.cashflowdivide.entity;
 
+import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableName;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -22,6 +23,9 @@ public class CashflowDivideLineEntity {
     private String feeChannel;
     private String secCode;
     private String description;
+    /** 原库存侧三笔流出逻辑生成的行，仅接口返回供前端标红，不落库 */
+    @TableField(exist = false)
+    private Boolean legacyLine;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -55,4 +59,6 @@ public class CashflowDivideLineEntity {
     public void setSecCode(String secCode) { this.secCode = secCode; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public Boolean getLegacyLine() { return legacyLine; }
+    public void setLegacyLine(Boolean legacyLine) { this.legacyLine = legacyLine; }
 }

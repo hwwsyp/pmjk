@@ -442,27 +442,76 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             String investmentManager) {
 
         List<CashflowDivideLineEntity> lines = new ArrayList<CashflowDivideLineEntity>();
+        List<CashflowDivideLineEntity> legacyLines = new ArrayList<CashflowDivideLineEntity>();
+        String tpt = StringUtils.isBlank(tptPortCode) ? "000000" : tptPortCode.trim();
+        String tptMk = tpt + "_MK_01";
 
+        BigDecimal totalNet = BigDecimal.ZERO;
+        for (PortAllocationVo p : allocations) {
+            if (p.getNetAmount() != null) {
+                totalNet = totalNet.add(p.getNetAmount());
+            }
+        }
+        totalNet = totalNet.setScale(2, RoundingMode.HALF_UP);
+
+        // 1) TPT 合计实收流入（FundIn）
+        if (isPositiveAmount(totalNet)) {
+            addLine(lines, "04", "", transferDate, tradeDate, "流入", tpt, cashAccount, investmentManager, secCode,
+                    totalNet, "", descPrefix + " - FundIn", false);
+            addLine(lines, "04", "", transferDate, tradeDate, "流入", tptMk, cashAccount, investmentManager, secCode,
+                    totalNet, "", descPrefix + " - FundIn", false);
+        }
+
+        // 2) 各持仓实收：TPT 流出至该组合
+        for (PortAllocationVo p : allocations) {
+            String stockSmallPort = p.getPortCode();
+            BigDecimal net = p.getNetAmount();
+            if (!isPositiveAmount(net)) {
+                continue;
+            }
+            String tptToDesc = descPrefix + " - TPT to " + stockSmallPort;
+            addLine(lines, "04", "", transferDate, tradeDate, "流出", tpt, cashAccount, investmentManager, secCode, net,
+                    "", tptToDesc, false);
+            addLine(lines, "04", "", transferDate, tradeDate, "流出", tptMk, cashAccount, investmentManager, secCode,
+                    net, "", tptToDesc, false);
+        }
+
+        // 原逻辑：库存侧手续费、税费、实收流出（前端标红）
         for (PortAllocationVo p : allocations) {
             String stockSmallPort = p.getPortCode();
             BigDecimal net = p.getNetAmount();
             BigDecimal fee = p.getBankFee();
             BigDecimal tax = p.getTaxAmount() == null ? BigDecimal.ZERO : p.getTaxAmount();
 
-            // 自库存小组合流出：手续费、税费(有则生成)、实收（大组合=左6位 + 库存小组合代码各一笔）
             if (isPositiveAmount(fee)) {
-                addInventoryOutPair(lines, "03", "BKC", transferDate, tradeDate, stockSmallPort, cashAccount,
+                addInventoryOutPair(legacyLines, "03", "BKC", transferDate, tradeDate, stockSmallPort, cashAccount,
                         investmentManager, secCode, fee, "", "Bank Charge - " + descPrefix);
             }
-
             if (isPositiveAmount(tax)) {
-                addInventoryOutPair(lines, "03", "QTFY", transferDate, tradeDate, stockSmallPort, cashAccount,
+                addInventoryOutPair(legacyLines, "03", "QTFY", transferDate, tradeDate, stockSmallPort, cashAccount,
                         investmentManager, secCode, tax, "QTL_SF", "Non-resident Alien Tax - " + descPrefix);
             }
-
-            addInventoryOutPair(lines, "04", "", transferDate, tradeDate, stockSmallPort, cashAccount, investmentManager,
-                    secCode, net, "", descPrefix + " - AI to MK");
+            addInventoryOutPair(legacyLines, "04", "", transferDate, tradeDate, stockSmallPort, cashAccount,
+                    investmentManager, secCode, net, "", descPrefix + " - AI to MK");
         }
+        lines.addAll(legacyLines);
+
+        // 3) 各持仓实收：大组合及大组合_MK_01 流入
+        for (PortAllocationVo p : allocations) {
+            String stockSmallPort = p.getPortCode();
+            BigDecimal net = p.getNetAmount();
+            if (!isPositiveAmount(net)) {
+                continue;
+            }
+            String bigPort = resolveBigPortCode(stockSmallPort);
+            String bigPortMk = bigPort + "_MK_01";
+            String aiDesc = descPrefix + " - AI to MK";
+            addLine(lines, "04", "", transferDate, tradeDate, "流入", bigPort, cashAccount, investmentManager, secCode,
+                    net, "", aiDesc, false);
+            addLine(lines, "04", "", transferDate, tradeDate, "流入", bigPortMk, cashAccount, investmentManager,
+                    secCode, net, "", aiDesc, false);
+        }
+
         return lines;
     }
 
@@ -495,14 +544,14 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
             String secCode, BigDecimal amount, String feeChannel, String desc) {
         String bigPort = resolveBigPortCode(stockSmallPortCode);
         addLine(lines, bizType, bizSubtype, transferDate, tradeDate, "流出", bigPort, cashAccount, manager, secCode,
-                amount, feeChannel, desc);
+                amount, feeChannel, desc, true);
         addLine(lines, bizType, bizSubtype, transferDate, tradeDate, "流出", stockSmallPortCode, cashAccount, manager,
-                secCode, amount, feeChannel, desc);
+                secCode, amount, feeChannel, desc, true);
     }
 
     private void addLine(List<CashflowDivideLineEntity> lines, String bizType, String bizSubtype,
             Date transferDate, Date tradeDate, String flow, String portCode, String cashAccount, String manager,
-            String secCode, BigDecimal amount, String feeChannel, String desc) {
+            String secCode, BigDecimal amount, String feeChannel, String desc, boolean legacyLine) {
         CashflowDivideLineEntity line = new CashflowDivideLineEntity();
         line.setBizType(bizType);
         line.setBizSubtype(bizSubtype == null ? "" : bizSubtype);
@@ -517,6 +566,7 @@ public class CashflowDivideServiceImpl implements CashflowDivideService {
         line.setFeeChannel(feeChannel);
         line.setSecCode(secCode);
         line.setDescription(desc);
+        line.setLegacyLine(legacyLine);
         lines.add(line);
     }
 
