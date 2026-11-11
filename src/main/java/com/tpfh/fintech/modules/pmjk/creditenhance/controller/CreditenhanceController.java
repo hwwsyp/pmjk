@@ -77,11 +77,15 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:creditenhance:save"})
     public R add(@RequestBody CreditenhanceVo creditenhanceVo) {
         ProductEntity productEntity = this.productService.getInfoById(creditenhanceVo.getProductid());
-        long versionNum = productEntity != null && productEntity.getCreditenhanceversion() != null
+        if (productEntity == null) {
+            return R.error("\u4ea7\u54c1\u4e0d\u5b58\u5728");
+        }
+        long versionNum = productEntity.getCreditenhanceversion() != null
             ? productEntity.getCreditenhanceversion()
             : 1L;
 
         Date now = new Date();
+        creditenhanceVo.setProductid(productEntity.getId());
         creditenhanceVo.setVersionnum(versionNum);
         creditenhanceVo.setCreatetimestamp(now);
         creditenhanceVo.setUpdatetimestamp(now);

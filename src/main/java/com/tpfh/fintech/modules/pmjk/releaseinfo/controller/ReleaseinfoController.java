@@ -96,11 +96,15 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:releaseinfo:save"})
     public R add(@RequestBody ReleaseinfoVo releaseinfoVo) {
         ProductEntity productEntity = this.productService.getInfoById(releaseinfoVo.getProductid());
-        long versionNum = productEntity != null && productEntity.getReleaseversion() != null
+        if (productEntity == null) {
+            return R.error("\u4ea7\u54c1\u4e0d\u5b58\u5728");
+        }
+        long versionNum = productEntity.getReleaseversion() != null
             ? productEntity.getReleaseversion()
             : 1L;
 
         Date now = new Date();
+        releaseinfoVo.setProductid(productEntity.getId());
         releaseinfoVo.setVersionnum(versionNum);
         releaseinfoVo.setCreatetimestamp(now);
         releaseinfoVo.setUpdatetimestamp(now);

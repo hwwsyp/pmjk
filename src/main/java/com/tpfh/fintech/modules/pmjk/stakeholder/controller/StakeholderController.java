@@ -71,11 +71,15 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:stakeholder:save"})
     public R add(@RequestBody StakeholderEntity stakeholderEntity) {
         ProductEntity productEntity = this.productService.getInfoById(stakeholderEntity.getProductid());
-        long versionNum = productEntity != null && productEntity.getStakeholderversion() != null
+        if (productEntity == null) {
+            return R.error("\u4ea7\u54c1\u4e0d\u5b58\u5728");
+        }
+        long versionNum = productEntity.getStakeholderversion() != null
             ? productEntity.getStakeholderversion()
             : 1L;
 
         Date now = new Date();
+        stakeholderEntity.setProductid(productEntity.getId());
         stakeholderEntity.setVersionnum(versionNum);
         stakeholderEntity.setCreatetimestamp(now);
         stakeholderEntity.setUpdatetimestamp(now);

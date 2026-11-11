@@ -76,11 +76,15 @@ extends AbstractController {
     @RequiresPermissions(value={"pmjk:otherinfo:save"})
     public R add(@RequestBody OtherinfoEntity otherinfoEntity) {
         ProductEntity productEntity = this.productService.getInfoById(otherinfoEntity.getProductid());
-        long versionNum = productEntity != null && productEntity.getOtherversion() != null
+        if (productEntity == null) {
+            return R.error("\u4ea7\u54c1\u4e0d\u5b58\u5728");
+        }
+        long versionNum = productEntity.getOtherversion() != null
             ? productEntity.getOtherversion()
             : 1L;
 
         Date now = new Date();
+        otherinfoEntity.setProductid(productEntity.getId());
         otherinfoEntity.setVersionnum(versionNum);
         otherinfoEntity.setCreatetimestamp(now);
         otherinfoEntity.setUpdatetimestamp(now);
