@@ -111,7 +111,7 @@ extends AbstractController {
     	productinfoEntity.setCreatetimestamp(now);
     	productinfoEntity.setUpdatetimestamp(now);
         this.productinfoService.insert(productinfoEntity);
-        return R.ok();
+        return R.ok().put("productinfoInfo", (Object) productinfoEntity);
     }
 
     @SysLog(value="\u66f4\u65b0")
